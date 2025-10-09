@@ -1,0 +1,139 @@
+{% set x = '123' %}
+"j2e" is an alias for "j2subst_escape"
+x = {{ repr(x) }}
+j2e(x): {{ x | j2e }}
+{% set x = '1 23' %}
+x = {{ repr(x) }}
+j2e(x): {{ x | j2e }}
+{% set x = '' %}
+x = {{ repr(x) }}
+j2e(x): {{ x | j2e }}
+{% set x = [1,2,3,4] %}
+x = {{ x }}
+j2e(x): {{ x | j2e }}
+{% set x = {1:2,3:4} %}
+x = {{ x }}
+j2e(x): {{ x | j2e }}
+
+{% set x = '123' %}
+x = {{ repr(x) }}
+is_str(x): {{ x | is_str }}
+is_seq(x): {{ x | is_seq }}
+is_map(x): {{ x | is_map }}
+any_to_str_list(x): {{ x | any_to_str_list }}
+
+{% set x = [1,2,3,4] %}
+x = {{ repr(x) }}
+is_str(x): {{ x | is_str }}
+is_seq(x): {{ x | is_seq }}
+is_map(x): {{ x | is_map }}
+any_to_str_list(x): {{ x | any_to_str_list }}
+
+{% set x = {1:2,3:4} %}
+x = {{ repr(x) }}
+is_str(x): {{ x | is_str }}
+is_seq(x): {{ x | is_seq }}
+is_map(x): {{ x | is_map }}
+any_to_str_list(x): {{ x | any_to_str_list }}
+
+{% set x = [2,3,1,2] %}
+x = {{ repr(x) }}
+uniq(x): {{ x | uniq }}
+
+{% set x = ['2',3,'1','2'] %}
+x = {{ repr(x) }}
+only_str(x): {{ x | only_str }}
+
+{% set x = ['2','','1','2'] %}
+x = {{ repr(x) }}
+non_empty_str(x): {{ x | non_empty_str }}
+
+{% set x = ['2','3','1','2'] %}
+x = {{ repr(x) }}
+uniq_str_list(x): {{ x | uniq_str_list }}
+
+{% set x = '2 3  1 2 ' %}
+x = {{ repr(x) }}
+str_split_to_list(x): {{ x | str_split_to_list }}
+
+{% set x = '2:3::1:2:' %}
+x = {{ repr(x) }}
+str_split_to_list(x, ':'): {{ x | str_split_to_list(':') }}
+
+{% set x = { 'VAR1': 'Etc/UTC', 'VAR2': '', 'VAR3': None, '4VAR4': 'yeah', 'VAR5=not': 'yeah', 'VAR5=real yeah': None, 'VAR6': {'pi': 3.1415926}, 'VAR7': ['pi', 3.1415926] } %}
+x = {{ repr(x) }}
+dict_keys(x): {{ x | dict_keys }}
+dict_empty_keys(x): {{ x | dict_empty_keys }}
+dict_non_empty_keys(x): {{ x | dict_non_empty_keys }}
+dict_to_str_list(x): {{ x | dict_to_str_list }}
+any_to_str_list(x): {{ x | any_to_str_list }}
+any_to_env_dict(x): {{ x | any_to_env_dict }}
+
+{% set x = 3.1415926 %}
+x = {{ repr(x) }}
+any_to_str_list(x): {{ x | any_to_str_list }}
+
+{% set x = ['a2','b3','c1','d2'] %}
+x = {{ repr(x) }}
+is_re_match(x, '[ab]'): {{ x | is_re_match('[ab]') }}
+is_re_match(x, '[mn]'): {{ x | is_re_match('[mn]') }}
+is_re_fullmatch(x, '[ab]'): {{ x | is_re_fullmatch('[ab]') }}
+is_re_fullmatch(x, '[ab][12]'): {{ x | is_re_fullmatch('[ab][12]') }}
+re_match(x, '[ab]'): {{ x | re_match('[ab]') }}
+re_match(x, '[mn]'): {{ x | re_match('[mn]') }}
+re_fullmatch(x, '[ab]'): {{ x | re_fullmatch('[ab]') }}
+re_fullmatch(x, '[ab][12]'): {{ x | re_fullmatch('[ab][12]') }}
+re_match_neg(x, '[ab]'): {{ x | re_match_neg('[ab]') }}
+re_match_neg(x, '[mn]'): {{ x | re_match_neg('[mn]') }}
+re_fullmatch_neg(x, '[ab]'): {{ x | re_fullmatch_neg('[ab]') }}
+re_fullmatch_neg(x, '[ab][12]'): {{ x | re_fullmatch_neg('[ab][12]') }}
+
+{% set x = ['a2b','b3b','c1f','d2g'] %}
+x = {{ repr(x) }}
+re_sub(x, '[ab]', '_'): {{ x | re_sub('[ab]', '_') }}
+re_sub(x, '[mn]', '_'): {{ x | re_sub('[mn]', '_') }}
+
+{% set x = 'VAR1=Etc/UTC' %}
+x = {{ repr(x) }}
+any_to_env_dict(x): {{ x | any_to_env_dict }}
+
+{% set x = ['VAR1=Etc/UTC', 'VAR2=', 'VAR3', '4VAR4=yeah', 'VAR5=yeah', 'VAR5=not-yeah'] %}
+x = {{ repr(x) }}
+any_to_env_dict(x): {{ x | any_to_env_dict }}
+
+{% set x = [1,2,3,4] %}
+{% set y = [3,4,5,6] %}
+x = {{ repr(x) }}
+y = {{ repr(y) }}
+list_diff(x, y): {{ x | list_diff(y) }}
+list_diff(y, x): {{ y | list_diff(x) }}
+list_intersect(x, y): {{ x | list_intersect(y) }}
+list_intersect(y, x): {{ y | list_intersect(x) }}
+
+{% set x = 'example.j2' %}
+x = {{ repr(x) }}
+md5(x): {{ x | md5 }}
+sha1(x): {{ x | sha1 }}
+sha256(x): {{ x | sha256 }}
+sha384(x): {{ x | sha384 }}
+sha512(x): {{ x | sha512 }}
+sha3_256(x): {{ x | sha3_256 }}
+sha3_384(x): {{ x | sha3_384 }}
+sha3_512(x): {{ x | sha3_512 }}
+file_md5(x): {{ x | file_md5 }}
+file_sha1(x): {{ x | file_sha1 }}
+file_sha256(x): {{ x | file_sha256 }}
+file_sha384(x): {{ x | file_sha384 }}
+file_sha512(x): {{ x | file_sha512 }}
+file_sha3_256(x): {{ x | file_sha3_256 }}
+file_sha3_384(x): {{ x | file_sha3_384 }}
+file_sha3_512(x): {{ x | file_sha3_512 }}
+
+{% set x = os_path.realpath(os_path.curdir) %}
+x = {{ repr(x) }}
+join_prefix(x, 'example.j2'): {{ join_prefix(x, 'example.j2') }}
+join_prefix(x, './example.j2'): {{ join_prefix(x, './example.j2') }}
+join_prefix(x, '/example.j2'): {{ join_prefix(x, '/example.j2') }}
+join_prefix(x, '../example.j2'): {{ join_prefix(x, '../example.j2') }}
+
+{# end of tests #}

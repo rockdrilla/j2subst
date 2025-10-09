@@ -1,0 +1,10 @@
+{
+    "python.analysis.ignore": [
+        ".mypy_cache/",
+        ".vscode/",
+        "docker/",
+        "venv/"
+    ],
+    "todo-tree.general.tags": [ "HACK", "FIXME", "TODO", "TYPING-TODO" ],
+    "todohighlight.keywords": [ "HACK", "FIXME", "TODO", "TYPING-TODO" ]
+}

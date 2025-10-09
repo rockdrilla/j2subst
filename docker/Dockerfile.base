@@ -1,0 +1,342 @@
+ARG PYTHONTAG=3.13.8-slim-trixie
+FROM docker.io/python:${PYTHONTAG} AS base-upstream
+
+FROM base-upstream AS base-intermediate
+SHELL [ "/bin/sh", "-ec" ]
+
+COPY /docker/scripts/*        /usr/local/sbin/
+COPY /docker/extra-scripts/*  /usr/local/sbin/
+
+## PATH: remove /sbin and /bin (/usr is merged)
+ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin \
+    TMPDIR=/tmp \
+    LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8 \
+    TERM=linux \
+    TZ=Etc/UTC \
+    MALLOC_ARENA_MAX=2 \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+COPY /docker/apt/sources.debian  /etc/apt/sources.list.d/debian.sources
+
+## backports done by me
+RUN mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
+ADD https://deb.krd.sh/krdeb.gpg.asc  /etc/apt/keyrings/krdeb.gpg.asc
+COPY /docker/apt/sources.krdeb        /etc/apt/sources.list.d/krdeb.sources
+RUN f='/etc/apt/keyrings/krdeb.gpg.asc /etc/apt/sources.list.d/krdeb.sources' ; \
+    chown root:root $f ; chmod 0644 $f
+
+## prevent services from auto-starting, part 1
+RUN s='/usr/sbin/policy-rc.d' ; b='/usr/bin/policy-rc.d' ; \
+    rm -f "$s" "$b" ; \
+    echo '#!/bin/sh' > "$b" ; \
+    echo 'exit 101' >> "$b" ; \
+    chmod 0755 "$b" ; \
+    ln -s "$b" "$s"
+
+RUN divert_true() { divert-rm.sh "$1" ; ln -sv /bin/true "$1" ; } ; \
+    ## prevent services from auto-starting, part 2
+    divert_true /sbin/start-stop-daemon ; \
+    ## always report that we're in chroot
+    divert_true /usr/bin/ischroot ; \
+    ## hide systemd helpers
+    divert_true /usr/bin/deb-systemd-helper ; \
+    divert_true /usr/bin/deb-systemd-invoke
+
+RUN apt-env.sh apt-get update ; \
+    apt-remove.sh \
+      e2fsprogs \
+    ; \
+    apt-env.sh apt-get upgrade -y ; \
+    apt-install.sh \
+      apt-utils \
+      jdupes \
+      libcap2-bin \
+      pwgen \
+      tzdata \
+    ; \
+    apt-clean.sh ; \
+    ## remove broken symlinks
+    find /etc/ -xdev -follow -type l -ls -delete
+
+## perl-base: hardlink->symlink
+RUN set +e ; \
+    d=/usr/bin ; \
+    ls -li "$d/perl" ; \
+    find "$d/" -xdev -samefile "$d/perl" 2>/dev/null \
+    | grep -Fxv -e "$d/perl" \
+    | while read -r p ; do \
+        [ -n "$p" ] || continue ; \
+        [ -e "$p" ] || continue ; \
+        ls -li "$p" ; \
+        rm -fv "$p" ; \
+        ln -fsv perl "$p" ; \
+        ls -li "$p" ; \
+        echo ; \
+    done
+
+## remove unwanted binaries
+RUN set -f ; \
+    for i in \
+      addgroup \
+      addpart \
+      adduser \
+      agetty \
+      apt-ftparchive \
+      badblocks \
+      blkdiscard \
+      blkid \
+      blkzone \
+      blockdev \
+      bsd-write \
+      chage \
+      chcpu \
+      chfn \
+      chgpasswd \
+      chmem \
+      chpasswd \
+      chsh \
+      cpgr \
+      cppw \
+      crontab \
+      ctrlaltdel \
+      debugfs \
+      delgroup \
+      delpart \
+      deluser \
+      dmesg \
+      dumpe2fs \
+      e2freefrag \
+      e2fsck \
+      e2image \
+      e2label \
+      e2mmpstatus \
+      e2scrub \
+     'e2scrub*' \
+      e2undo \
+      e4crypt \
+      e4defrag \
+      expiry \
+      faillock \
+      fdformat \
+      fincore \
+      findfs \
+      fsck \
+     'fsck.*' \
+      fsfreeze \
+      fstrim \
+      getty \
+      gpasswd \
+      groupadd \
+      groupdel \
+      groupmems \
+      groupmod \
+      grpck \
+      grpconv \
+      grpunconv \
+      hwclock \
+      isosize \
+      last \
+      lastb \
+      ldattach \
+      login \
+      losetup \
+      lsblk \
+      lsirq \
+      lslogins \
+      mcookie \
+      mesg \
+      mke2fs \
+      mkfs \
+     'mkfs.*' \
+      mkhomedir_helper \
+      mklost+found \
+      mkswap \
+      mount \
+      newgrp \
+      newusers \
+      pam_getenv \
+      pam_namespace_helper \
+      pam_timestamp_check \
+      pam-auth-update \
+      partx \
+      passwd \
+      pivot_root \
+      pwck \
+      pwconv \
+      pwhistory_helper \
+      pwunconv \
+      raw \
+      readprofile \
+      resize2fs \
+      resizepart \
+      rtcwake \
+      sg \
+      shadowconfig \
+      su \
+      sulogin \
+      swaplabel \
+      swapoff \
+      swapon \
+      switch_root \
+      tune2fs \
+      umount \
+      unix_chkpwd \
+      unix_update \
+      useradd \
+      userdel \
+      usermod \
+      utmpdump \
+      vigr \
+      vipw \
+      wall \
+      wdctl \
+      wipefs \
+      write \
+     'write.*' \
+      zramctl \
+    ; do \
+        ## try dpkg-divert first
+        for d in /usr/sbin /usr/bin ; do \
+            find "$d/" ! -type d -wholename "$d/$i" ; \
+        done \
+        | while read -r p ; do \
+            [ -n "$p" ] || continue ; \
+            [ -e "$p" ] || continue ; \
+            dpkg-search.sh "$p" || continue ; \
+        done \
+        | sed -E '/^diversion by/d' \
+        | sort -uV \
+        | while read -r pkg path ; do \
+            [ -n "${pkg}" ] || continue ; \
+            [ -e "${path}" ] || continue ; \
+            divert-rm.sh "${path}" ; \
+        done ; \
+        ## remove if still exists
+        for d in /usr/sbin /usr/bin ; do \
+            find "$d/" ! -type d -wholename "$d/$i" ; \
+        done \
+        | while read -r p ; do \
+            [ -n "$p" ] || continue ; \
+            [ -e "$p" ] || continue ; \
+            rm -fv "$p" ; \
+        done ; \
+    done ; \
+    ## remove broken symlinks
+    find /bin/ /sbin/ -xdev -follow -type l -ls -delete
+
+## remove excessive privileges from binaries: setuid/setgid
+RUN find / -xdev -type f -perm /7000 \
+    | sort -V \
+    | while read -r p ; do \
+        [ -n "$p" ] || continue ; \
+        ## clear setuid/setgid bit
+        m=$(env stat -c '0%a' "$p") ; \
+        m=$(printf '0%o\n' $((m & 00777)) ) ; \
+        ## try to lookup in dpkg database
+        n=$(set +e ; dpkg-search.sh "$p" | sed -E '/^diversion by/d' | cut -d ' ' -f2-) ; \
+        ls -l "$p" ; \
+        if [ "$p" = "$n" ] ; then \
+            o=$(env stat -c '%U' "$n") ; \
+            g=$(env stat -c '%G' "$n") ; \
+            dpkg-statoverride --force-all --update --add "$o" "$g" "$m" "$n" ; \
+        else \
+            env printf 'unable to find in dpkg database: %q\n' "$n" ; \
+            chmod "$m" "$p" ; \
+        fi ; \
+        ls -l "$p" ; \
+    done
+
+## remove excessive privileges from binaries: setcap
+RUN find / -xdev -type f -executable -exec getcap {} + \
+    | sort -V \
+    | while read -r path caps ; do \
+        [ -n "${path}" ] || continue ; \
+        if [ "${path}" = /usr/bin/ping ] ; then continue ; fi ; \
+        getcap -v "${path}" ; \
+        setcap -r "${path}" "${caps}" 2>/dev/null || : ; \
+        getcap -v "${path}" ; \
+    done
+
+## "docker.io/python"-specific cleanup
+RUN env -C /root rm -f .bash_history .python_history .wget-hsts
+
+## ---
+
+FROM base-intermediate AS certs
+SHELL [ "/bin/sh", "-ec" ]
+
+## "2025.10.05"
+ENV CERTIFI_COMMIT=fb14ac49a976b1695d84b1ac1307276a20b3aac9
+
+# ARG CERTIFI_BASE_URI='https://raw.githubusercontent.com/certifi/python-certifi'
+ARG CERTIFI_BASE_URI='https://github.com/certifi/python-certifi/raw'
+
+ARG CERTIFI_URI="${CERTIFI_BASE_URI}/${CERTIFI_COMMIT}/certifi/cacert.pem"
+ADD "${CERTIFI_URI}"  /tmp/certifi.crt
+
+RUN apt-install.sh ca-certificates openssl ; \
+    apt-clean.sh ; \
+    ca_file='/etc/ssl/certs/ca-certificates.crt' ; \
+    ls -l "${ca_file}" ; \
+    ## process certifi
+    certifi-extras.sh /tmp/certifi.crt ; \
+    openssl-cert-auto-pem.sh "${ca_file}" "${ca_file}.new" "${ca_file}.fp" ; \
+    mv -f "${ca_file}.new" "${ca_file}" ; \
+    chmod 0444 "${ca_file}" "${ca_file}.fp" ; \
+    ls -l "${ca_file}" "${ca_file}.fp"
+
+## ---
+
+FROM base-intermediate AS base-final
+SHELL [ "/bin/sh", "-ec" ]
+
+COPY /docker/Dockerfile.base  /usr/local/share/
+
+RUN apt-env.sh dpkg --purge \
+      ca-certificates \
+      openssl \
+    ; \
+    apt-clean.sh ; \
+    ## remove broken symlinks
+    find /etc/ -xdev -follow -type l -ls -delete
+
+COPY --from=certs  /etc/ssl/certs/ca-certificates.*   /etc/ssl/certs/
+COPY --from=certs  /usr/local/share/ca-certificates/  /usr/local/share/ca-certificates/
+
+RUN python-rm-cache.sh /usr/local
+
+RUN pip-env.sh \
+      pip list --format freeze \
+    | grep -F '==' | awk -F= '{print $1}' \
+    | xargs -r pip-env.sh pip install -U ; \
+    python-rm-cache.sh /usr/local
+
+RUN libpython="${PYTHON_SITE_PACKAGES%/*}" ; \
+    rm -rfv \
+      /usr/local/bin/idle* \
+      /usr/local/bin/pydoc* \
+      "${libpython}/ensurepip/_bundled" \
+      "${libpython}/idlelib" \
+      "${libpython}/pydoc.py" \
+      "${libpython}/pydoc_data" \
+      "${libpython}/tkinter" \
+      "${libpython}/turtle.py" \
+      "${libpython}/turtledemo" \
+    ; \
+    find "${PYTHON_SITE_PACKAGES}/" -iname '*.exe' -ls -delete
+
+## adjust pip/certifi
+RUN certifi_pem="${PYTHON_SITE_PACKAGES}/pip/_vendor/certifi/cacert.pem" ; \
+    [ -d "${certifi_pem%/*}" ] || exit 0 ; \
+    rm -f "${certifi_pem}" ; \
+    ln -sv /etc/ssl/certs/ca-certificates.crt "${certifi_pem}"
+
+RUN find /usr/local/sbin/ ! -type d -ls -delete ; \
+    find /run/ -mindepth 1 -ls -delete || : ; \
+    install -d -m 01777 /run/lock ; \
+    jdupes -1LSpr /usr/
+
+ENTRYPOINT [ ]
+CMD [ "bash" ]

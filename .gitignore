@@ -1,0 +1,6 @@
+/.mypy_cache/
+/.vscode/
+/venv/
+
+*.py[cdo]
+/**/__pycache__
