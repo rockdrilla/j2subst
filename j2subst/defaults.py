@@ -58,7 +58,6 @@ J2SUBST_BUILTIN_FUNCTIONS: list[Any] = [
     isinstance,
     len,
     list,
-    open,
     repr,
     set,
     sorted,

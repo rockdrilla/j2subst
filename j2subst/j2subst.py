@@ -113,7 +113,7 @@ class J2subst:
         self.unlink = bool(unlink)
 
         template_path = template_path or J2SUBST_TEMPLATE_PATH_PARTS
-        self.template_path: list[str | PathLike[str]] = non_empty_str(template_path)
+        self.template_path: list[str] = non_empty_str(template_path)
 
         self.dict_env: dict[str, str] = {}
         self.j2fs_loaders: dict[str, jinja2.FileSystemLoader] = {}
@@ -254,6 +254,34 @@ class J2subst:
 
         return self.__ensure_fs_loader_for(d)
 
+    def __resolve_origin(self, origin: str | PathLike[str] | None = None) -> tuple[str | None, bool]:
+
+        def __warn(msg: str):
+            self.__warn('__resolve_origin', msg)
+
+        if origin is None:
+            return (None, False)
+
+        if not os.path.exists(origin):
+            __warn(f'does not exist: {repr(origin)}')
+            return (None, False)
+
+        _origin = os.path.normpath(origin)
+        if os.path.isdir(_origin):
+            _origin = str(_origin)
+        elif os.path.isfile(_origin):
+            _origin = str(os.path.dirname(_origin))
+            if _origin == '':
+                _origin = '.'
+        else:
+            __warn(f'not a file or directory: {repr(origin)}')
+            return (None, False)
+
+        _want_root = _origin.startswith('/')
+        _origin = str(os.path.abspath(_origin))
+
+        return (_origin, _want_root)
+
     def resolve_template_path(self, resolve_placeholders: bool, origin: str | PathLike[str] | None = None) -> list[str]:
         self.__verify_dump_only()
 
@@ -266,23 +294,7 @@ class J2subst:
         def __debug(msg: str):
             self.__debug('resolve_template_path', msg)
 
-        if origin is not None:
-            if os.path.isdir(origin):
-                pass
-            elif os.path.isfile(origin):
-                origin = os.path.dirname(origin)
-                if str(origin) == '':
-                    origin = '.'
-            else:
-                __warn(f'not a file or directory, or does not exist: {repr(origin)}')
-                origin = None
-
-        _want_root = False
-        if origin is not None:
-            origin = str(os.path.normpath(origin))
-            if origin.startswith('/'):
-                _want_root = True
-            origin = str(os.path.abspath(origin))
+        _origin, _want_root = self.__resolve_origin(origin)
 
         # dirs: list[str | PathLike[str]] = []
         dirs: list[str] = []
@@ -296,8 +308,8 @@ class J2subst:
                     continue
 
                 s = s.replace('@{CWD}', os.getcwd())
-                if origin is not None:
-                    s = s.replace('@{ORIGIN}', origin)
+                if _origin is not None:
+                    s = s.replace('@{ORIGIN}', _origin)
 
                 ## skip if there're still some special placeholders
                 if s.find('@{') >= 0:
@@ -311,10 +323,11 @@ class J2subst:
 
             dirs.append(s)
 
-        if '/' in dirs:
-            _want_root = False
         if _want_root:
-            dirs.append('/')
+            if '/' in dirs:
+                __info('duplicate template path: "/"')
+            else:
+                dirs.append('/')
 
         dirs_final: list[str] = []
         for d in dirs:
@@ -483,7 +496,7 @@ class J2subst:
             return self.dump_config_json()
         raise ValueError(f'unknown dump format: {repr(fmt)}')
 
-    def env_overlay(self, origin: str | PathLike[str] | None = None, **kwargs: dict[str, Any]) -> jinja2.Environment:
+    def env_overlay(self, j2subst_origin: str | PathLike[str] | None = None, **kwargs: dict[str, Any]) -> jinja2.Environment:
         self.__verify_dump_only()
 
         kw: dict[str, Any] = {}
@@ -494,7 +507,7 @@ class J2subst:
         if (_x is not None) and isinstance(_x, jinja2.BaseLoader):
             pass
         else:
-            dirs: list[str] = self.resolve_template_path(resolve_placeholders=True, origin=origin)
+            dirs: list[str] = self.resolve_template_path(resolve_placeholders=True, origin=j2subst_origin)
 
             loader: jinja2.BaseLoader
             if dirs:
@@ -511,17 +524,20 @@ class J2subst:
     def render_str(self, string: str, j2env_overlay: jinja2.Environment | None = None) -> tuple[str, str | None]:
         self.__verify_dump_only()
 
-        _e = j2env_overlay
-        if _e is None:
-            _e = self.env_overlay()
-        _t = _e.from_string(string)
+        _env = j2env_overlay
+        if _env is None:
+            _env = self.env_overlay()
+        t = _env.from_string(string)
 
         kw: dict[str, Any] = {
             self.dict_cfg_name: self.dict_cfg,
             self.dict_env_name: self.dict_env,
+            ## hardcoded:
+            'j2subst_file': None,
+            'j2subst_origin': None,
         }
 
-        return _t.render(**kw), None
+        return t.render(**kw), None
 
     def render_text_io(self, io_source: io.TextIOBase, j2env_overlay: jinja2.Environment | None = None) -> tuple[str, str | None]:
         return self.render_str(''.join(io_source.readlines()), j2env_overlay)
@@ -529,17 +545,42 @@ class J2subst:
     def render_from_file(self, filename: str, j2env_overlay: jinja2.Environment | None = None) -> tuple[str, str | None]:
         self.__verify_dump_only()
 
-        _e = j2env_overlay
-        if _e is None:
-            _e = self.env_overlay(filename)
-        _t = _e.get_template(filename)
+        def __debug(msg: str):
+            self.__debug('render_from_file', msg)
+
+        _env = j2env_overlay
+        if _env is None:
+            ## preserve internal settings
+            (_v, _d, _s) = (self.verbosity, self.debug, self.strict)
+            ## override internal settings for this call
+            (self.verbosity, self.debug, self.strict) = (-1, False, False)
+            _env = self.env_overlay()
+            ## restore internal settings
+            (self.verbosity, self.debug, self.strict) = (_v, _d, _s)
+
+            __debug('trying to resolve with self.env_overlay()')
+
+            ## TODO: avoid try-except
+            try:
+                _env.get_template(filename)
+            except jinja2.TemplateNotFound:
+                __debug(f'jinja2.TemplateNotFound: {repr(filename)}')
+                __debug(f'trying to resolve with self.env_overlay({repr(filename)})')
+
+                _env = self.env_overlay(filename)
+
+        t = _env.get_template(filename)
+        _origin, _ = self.__resolve_origin(t.filename)
 
         kw: dict[str, Any] = {
             self.dict_cfg_name: self.dict_cfg,
             self.dict_env_name: self.dict_env,
+            ## hardcoded:
+            'j2subst_file': t.filename,
+            'j2subst_origin': _origin,
         }
 
-        return _t.render(**kw), _t.filename
+        return t.render(**kw), t.filename
 
     def render_stdin(self, j2env_overlay: jinja2.Environment | None = None) -> str:
         self.__verify_dump_only()
