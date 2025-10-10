@@ -31,6 +31,7 @@ from .functions import (
     str_split_to_list,
 )
 from .cli_help import (
+    J2SUBST_CLI_HELP__CICD,
     J2SUBST_CLI_HELP__CLICK,
     J2SUBST_CLI_HELP__DUMP,
     J2SUBST_CLI_HELP__ENV,
@@ -46,19 +47,19 @@ J2SUBST_CLI_HELP_CONFIG_PATH = f'''
     Colon-separated list of configuration files or directories.
 
     Default: {J2SUBST_CONFIG_PATH}
-    '''
+'''
 
 J2SUBST_CLI_HELP_TEMPLATE_PATH = f'''
     Colon-separated list of template directories.
 
     Default: {J2SUBST_TEMPLATE_PATH}
-    '''
+'''
 
 J2SUBST_CLI_HELP_PYTHON_MODULES = '''
     Space-separated list of Python modules to import.
 
     To import module with an alias, use format: <alias_name>:<module_name>.
-    '''
+'''
 
 
 def __dump_callback(_ctx: Any, _param: Any, value: str | bool | None) -> J2substDumpFormat | None:
@@ -97,6 +98,10 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
 )
 
 ## extra help topics
+@click.option('--help-cicd',
+    'o_help_cicd', is_flag=True,
+    help='Show help for J2subst behavior in CI/CD.',
+)
 @click.option('--help-click',
     'o_help_click', is_flag=True,
     help='Show help for Click behavior.',
@@ -204,6 +209,8 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
 @click.pass_context
 def cli(ctx: click.Context,
 
+        ## extra help topics
+        o_help_cicd: bool,
         o_help_click: bool,
         o_help_dump: bool,
         o_help_env: bool,
@@ -230,18 +237,17 @@ def cli(ctx: click.Context,
 ):
 
     ## extra help topics
-    if o_help_click:
-        click.echo(J2SUBST_CLI_HELP__CLICK)
-        ctx.exit()
-    if o_help_dump:
-        click.echo(J2SUBST_CLI_HELP__DUMP)
-        ctx.exit()
-    if o_help_env:
-        click.echo(J2SUBST_CLI_HELP__ENV)
-        ctx.exit()
-    if o_help_template_path:
-        click.echo(J2SUBST_CLI_HELP__TEMPLATE_PATH)
-        ctx.exit()
+    help_topics = [
+        [ o_help_cicd,          J2SUBST_CLI_HELP__CICD, ],
+        [ o_help_click,         J2SUBST_CLI_HELP__CLICK, ],
+        [ o_help_dump,          J2SUBST_CLI_HELP__DUMP, ],
+        [ o_help_env,           J2SUBST_CLI_HELP__ENV, ],
+        [ o_help_template_path, J2SUBST_CLI_HELP__TEMPLATE_PATH, ],
+    ]
+    for h in help_topics:
+        if h[0]:
+            click.echo(h[1])
+            ctx.exit()
 
     ## verify command-line usage
     if o_dump_fmt is not None:
