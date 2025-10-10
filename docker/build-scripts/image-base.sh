@@ -33,6 +33,7 @@ buildah bud \
   -f docker/Dockerfile.base \
   -t "${base}" \
   --pull=missing --no-cache \
+  --ignorefile=docker/.dockerignore \
   --build-arg "PYTHONTAG=${PYTHONTAG}" \
   --env "PYTHON_SITE_PACKAGES=${PYTHON_SITE_PACKAGES}" \
   --unsetenv GPG_KEY \

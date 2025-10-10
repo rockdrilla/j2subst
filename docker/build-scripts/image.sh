@@ -17,4 +17,5 @@ buildah bud \
   -f docker/Dockerfile \
   -t "${img}" \
   --pull=missing --no-cache \
+  --ignorefile=docker/.dockerignore \
   --build-arg "BASE_IMAGE=${base}" \
