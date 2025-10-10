@@ -638,15 +638,47 @@ class J2subst:
 
             if os.path.isdir(e):
                 if depth < 0:
-                    rv = rv and self.render_directory(e, depth, j2env_overlay)
+                    rv &= self.render_directory(e, depth, j2env_overlay)
                 else:
-                    rv = rv and self.render_directory(e, depth - 1, j2env_overlay)
+                    rv &= self.render_directory(e, depth - 1, j2env_overlay)
                 continue
 
             if e.endswith(J2SUBST_TEMPLATE_EXT) and os.path.isfile(e):
-                rv = rv and self.render_file(e, None, j2env_overlay)
+                rv &= self.render_file(e, None, j2env_overlay)
                 continue
 
             __info(f'ignore: {e}')
 
         return rv
+
+    def handle_simple_cli_args(self, arg1: str | PathLike[str], arg2: str | PathLike[str] | None = None) -> tuple[str | None, str | None]:
+        _in, _out = (None, None)
+
+        ## 1st argument is missing or empty
+        if not arg1:
+            return (_in, _out)
+
+        if is_stdin(arg1):
+            _in = '-'
+        else:
+            a = os.path.normpath(arg1)
+            if os.path.isfile(a) and a.endswith(J2SUBST_TEMPLATE_EXT):
+                _in = str(arg1)
+
+        ## early exit:
+        ## 1) 1st argument not a stdin or file with supported file name extension
+        ## 2) 2nd argument is missing or empty
+        if (_in is None) or (not arg2):
+            return (_in, _out)
+
+        if is_stdout(arg2):
+            _out = '-'
+        else:
+            a = os.path.normpath(arg2)
+            if a.endswith(J2SUBST_TEMPLATE_EXT):
+                ## perform regular processing: 2nd argument is (probably) template too
+                _in = None
+            else:
+                _out = a
+
+        return (_in, _out)

@@ -320,8 +320,11 @@ def cli(ctx: click.Context,
                 raise click.UsageError(f'not valid "python_modules": {repr(m)}', ctx)
 
     args: list[str] = list(cli_args)
-    if is_ci() and len(args) == 0:
-        args = [ os.getcwd() ]
+    if len(args) == 0:
+        if is_ci():
+            args = [ os.getcwd() ]
+        else:
+            raise click.UsageError('no arguments were specified', ctx)
 
     j = J2subst(
             verbosity=o_verbose,
@@ -339,25 +342,26 @@ def cli(ctx: click.Context,
             dict_name_env=o_dict_name_env,
     )
 
-    _len = len(args)
-    if _len == 1:
-        if is_stdin(args[0]) or os.path.isfile(args[0]):
-            j.render_file(args[0])
-            ctx.exit()
-    elif _len == 2:
-        if is_stdin(args[0]) or os.path.isfile(args[0]):
-            j.render_file(args[0], args[1])
-            ctx.exit()
+    ## deal with 1/2 argument mode
+    _in, _out = j.handle_simple_cli_args(*args[:2])
 
-    ## disallow stdin/stdout from this moment
-    j.allow_stdin_stdout = False
+    r = True
+    if _in:
+        r &= j.render_file(_in, _out)
+    else:
+        ## disallow stdin/stdout from this moment
+        j.allow_stdin_stdout = False
 
-    for arg in args:
-        if os.path.isfile(arg):
-            j.render_file(arg)
-        else:
-            j.render_directory(arg, o_depth)
+        for arg in args:
+            if os.path.isdir(arg):
+                r &= j.render_directory(arg, o_depth)
+            else:
+                r &= j.render_file(arg)
 
+    if not r:
+        ctx.exit(1)
+
+    ctx.exit(0)
     return
 
 
