@@ -13,8 +13,6 @@ import click.core
 ## this module
 from .dumpfmt import J2substDumpFormat
 from .defaults import (
-    J2SUBST_CONFIG_PATH_PARTS,
-    J2SUBST_CONFIG_PATH,
     J2SUBST_DICT_NAME_CFG,
     J2SUBST_DICT_NAME_ENV,
     J2SUBST_DUMP_FORMAT,
@@ -43,10 +41,9 @@ from .j2subst import J2subst
 ## NB: click.option() with "show_envvar=True" does a somewhat horrible formatting
 ## so we do it manually (see cli_help.py)
 
-J2SUBST_CLI_HELP_CONFIG_PATH = f'''
+J2SUBST_CLI_HELP_CONFIG_PATH = '''
     Colon-separated list of configuration files or directories.
-
-    Default: {J2SUBST_CONFIG_PATH}
+    Supported formats: YAML (".yaml", ".yml"), JSON (".json"), TOML (".toml").
 '''
 
 J2SUBST_CLI_HELP_TEMPLATE_PATH = f'''
@@ -165,7 +162,6 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
 
 @click.option('--config-path', '-c',
     'o_config_path',
-    default=J2SUBST_CONFIG_PATH,
     envvar='J2SUBST_CONFIG_PATH',
     help=J2SUBST_CLI_HELP_CONFIG_PATH,
     metavar='LIST',
@@ -282,9 +278,8 @@ def cli(ctx: click.Context,
     if o_quiet:
         o_verbose = -1
 
-    if o_config_path is None:
-        _config_path = J2SUBST_CONFIG_PATH_PARTS
-    else:
+    _config_path = None
+    if o_config_path is not None:
         _config_path = str_split_to_list(o_config_path, ':')
 
     if o_dump_fmt is not None:

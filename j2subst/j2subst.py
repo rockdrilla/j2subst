@@ -30,7 +30,6 @@ from .defaults import (
     J2SUBST_BUILTIN_FUNCTION_ALIASES,
     J2SUBST_BUILTIN_FUNCTIONS,
     J2SUBST_CONFIG_EXT,
-    J2SUBST_CONFIG_PATH_PARTS,
     J2SUBST_DICT_NAME_CFG,
     J2SUBST_DICT_NAME_ENV,
     J2SUBST_DUMP_FORMAT,
@@ -101,8 +100,9 @@ class J2subst:
 
         self.dict_cfg: dict[str, Any] = {}
 
-        config_path = config_path or J2SUBST_CONFIG_PATH_PARTS
-        self.config_path: list[str | PathLike[str]] = non_empty_str(config_path)
+        self.config_path: list[str] = []
+        if config_path:
+            self.config_path = non_empty_str(config_path)
 
         self.__merge_dict_default()
 
