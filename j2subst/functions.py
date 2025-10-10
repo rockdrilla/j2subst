@@ -1,15 +1,27 @@
-from collections.abc import Mapping, Sequence
 import hashlib
 import io
-from os import PathLike
 import os
 import os.path
 import re
 import sys
-from typing import Any, Callable
+
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
+from os import (
+    PathLike,
+)
+from typing import (
+    Any,
+    Callable,
+)
 
 ## this module
-from .defaults import *
+from .defaults import (
+    J2SUBST_ENV_CI,
+    J2SUBST_ENV_SKIP,
+)
 
 
 def is_str(x: Any) -> bool:
@@ -534,7 +546,6 @@ def is_ci(_x: Any = None) -> bool:
     return __j2subst_is_ci
 
 
-## TYPING-TODO: list[Callable]
 J2SUBST_FILTERS: list[Any] = [
     any_to_env_dict,
     any_to_str_list,
@@ -592,7 +603,6 @@ J2SUBST_FILTERS: list[Any] = [
     uniq_str_list,
 ]
 
-## TYPING-TODO: dict[str, Callable]
 J2SUBST_FILTER_ALIASES: dict[str, Any] = {
     'j2e': j2subst_escape,
 }

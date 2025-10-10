@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 
 import os
-from typing import Any, Callable
+
+from typing import (
+    Any,
+)
 
 ## click
 import click
@@ -9,16 +12,21 @@ import click.core
 
 ## this module
 from .dumpfmt import J2substDumpFormat
-from .defaults import *
+from .defaults import (
+    J2SUBST_CONFIG_PATH_PARTS,
+    J2SUBST_CONFIG_PATH,
+    J2SUBST_DICT_NAME_CFG,
+    J2SUBST_DICT_NAME_ENV,
+    J2SUBST_DUMP_FORMAT,
+    J2SUBST_MAX_DEPTH,
+    J2SUBST_TEMPLATE_PATH_PARTS,
+    J2SUBST_TEMPLATE_PATH,
+    J2SUBST_VERSION,
+)
 from .functions import (
     click_bool,
     click_bool_neg,
     is_ci,
-    is_file_io,
-    is_file_io_read,
-    is_file_io_write,
-    is_stdin,
-    is_stdout,
     is_str,
     str_split_to_list,
 )

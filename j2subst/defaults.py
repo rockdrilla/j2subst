@@ -1,4 +1,6 @@
-from typing import Any, Callable
+from typing import (
+    Any,
+)
 
 ## this module
 from .dumpfmt import J2substDumpFormat
@@ -49,7 +51,6 @@ J2SUBST_PYTHON_MODULE_ALIASES = {
     'os_path': 'os.path',
 }
 
-## TYPING-TODO: list[Callable]
 J2SUBST_BUILTIN_FUNCTIONS: list[Any] = [
     bool,
     # dict, ## already present
@@ -65,7 +66,6 @@ J2SUBST_BUILTIN_FUNCTIONS: list[Any] = [
     type,
 ]
 
-## TYPING-TODO: dict[str, Callable]
 J2SUBST_BUILTIN_FUNCTION_ALIASES: dict[str, Any] = {
 }
 

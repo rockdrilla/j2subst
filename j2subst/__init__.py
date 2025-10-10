@@ -1,7 +1,5 @@
 ## this module
 from .dumpfmt import J2substDumpFormat
-from .defaults import *
-from .functions import J2SUBST_FILTERS, J2SUBST_FILTER_ALIASES
 from .j2subst import J2subst
 
 

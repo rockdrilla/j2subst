@@ -1,16 +1,23 @@
-from collections.abc import Mapping, Sequence
 import io
-from os import PathLike
 import os
 import os.path
 import sys
 import importlib
 import json
 import tomllib
-from typing import Any, Callable
+
+from collections.abc import (
+    Mapping,
+    Sequence,
+)
+from os import (
+    PathLike,
+)
+from typing import (
+    Any,
+)
 
 ## jinja2
-from click.core import F
 import jinja2
 ## pyyaml
 import yaml
@@ -19,8 +26,36 @@ import wcmatch.wcmatch
 
 ## this module
 from .dumpfmt import J2substDumpFormat
-from .defaults import *
-from .functions import *
+from .defaults import (
+    J2SUBST_BUILTIN_FUNCTION_ALIASES,
+    J2SUBST_BUILTIN_FUNCTIONS,
+    J2SUBST_CONFIG_EXT,
+    J2SUBST_CONFIG_PATH_PARTS,
+    J2SUBST_DICT_NAME_CFG,
+    J2SUBST_DICT_NAME_ENV,
+    J2SUBST_DUMP_FORMAT,
+    J2SUBST_EMPTY_JSON,
+    J2SUBST_EMPTY_YAML,
+    J2SUBST_JINJA_DEBUG_EXTENSIONS,
+    J2SUBST_JINJA_EXTENSIONS,
+    J2SUBST_PYTHON_MODULE_ALIASES,
+    J2SUBST_PYTHON_MODULES,
+    J2SUBST_TEMPLATE_EXT,
+    J2SUBST_TEMPLATE_PATH_PARTS,
+)
+from .functions import (
+    J2SUBST_FILTERS,
+    J2SUBST_FILTER_ALIASES,
+    is_env_skipped,
+    is_map,
+    is_plain_key,
+    is_seq,
+    is_stdin,
+    is_stdout,
+    merge_dict_recurse,
+    non_empty_str,
+    uniq,
+)
 
 
 ## NB: no dot is required after wildcard - see "J2SUBST_CONFIG_EXT"
@@ -319,11 +354,9 @@ class J2subst:
             return
         self.__import_python_module(module_name, n)
 
-    ## TYPING-TODO: func: Callable
     def __import_filter(self, func: Any, alias: str):
         self.j2env.filters.update( { alias: func } )
 
-    ## TYPING-TODO: func: Callable
     def import_filter(self, func: Any, alias: str | None = None):
         self.__verify_dump_only()
 
@@ -342,11 +375,9 @@ class J2subst:
             return
         self.__import_filter(func, n)
 
-    ## TYPING-TODO: func: Callable
     def __import_function(self, func: Any, alias: str):
         self.j2env.globals.update( { alias: func } )
 
-    ## TYPING-TODO: func: Callable
     def import_builtin_function(self, func: Any, alias: str | None = None):
         self.__verify_dump_only()
 
@@ -365,7 +396,6 @@ class J2subst:
             return
         self.__import_function(func, n)
 
-    ## TYPING-TODO: func: Callable
     def import_function(self, func: Any, alias: str | None = None):
         self.__verify_dump_only()
 

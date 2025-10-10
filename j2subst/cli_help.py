@@ -7,7 +7,9 @@ from .defaults import (
     J2SUBST_EMPTY_JSON,
     J2SUBST_EMPTY_YAML,
 )
-from .functions import re_sub
+from .functions import (
+    re_sub,
+)
 
 
 J2SUBST_CLI_HELP__DUMP = f'''
