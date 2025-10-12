@@ -23,28 +23,7 @@ docker pull docker.io/rockdrilla/j2subst
 ### From PyPI
 
 ```sh
-## not yet released to PyPI
-# pip install j2subst
-```
-
-### From source (development)
-
-```sh
-git clone https://github.com/rockdrilla/j2subst.git j2subst-dev
-cd j2subst-dev
-
-## install requirements
-## NB: pip may require "--break-system-packages" flag to succeed
-pip install --user -r requirements.txt
-
-## install "j2subst" to user site-packages
-user_site_packages=$(python3 -c 'import site;print(site.getusersitepackages())')
-[ -d "${user_site_packages}" ] || mkdir -p "${user_site_packages}"
-ln -s "${PWD}/j2subst" "${user_site_packages}/"
-
-## install script
-## assuming that ${PATH} variable contains "${HOME}/bin" directory
-cp "${PWD}/docker/scripts/j2subst" "${HOME}/bin/"
+pip install j2subst
 ```
 
 ## Quick Start
