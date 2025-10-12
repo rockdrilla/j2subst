@@ -8,7 +8,7 @@ SHELL [ "/bin/sh", "-ec" ]
 
 COPY /docker/scripts/*  /usr/local/sbin/
 
-COPY /requirements.txt               /tmp/
+COPY /j2subst/dist/requirements.txt  /tmp/
 COPY /docker/requirements-extra.txt  /tmp/
 
 ENV PYTHON_BUILD_FROM_SOURCE='markupsafe,psutil,pyyaml'

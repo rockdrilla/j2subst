@@ -1,0 +1,10 @@
+click==8.3.0
+pyyaml==6.0.3
+
+## jinja2
+markupsafe==3.0.3
+jinja2==3.1.6
+
+## wcmatch
+bracex==2.6
+wcmatch==10.1
