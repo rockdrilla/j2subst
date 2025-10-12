@@ -1,0 +1,71 @@
+[project]
+name = "j2subst"
+version = "0.0.2"
+description = "Jinja2 template substitution tool"
+authors = [
+    { name = "Konstantin Demin", email = "rockdrilla@gmail.com" },
+]
+license = "Apache-2.0"
+license-files = [ "LICENSE" ]
+readme = "README.md"
+requires-python = ">=3.11"
+keywords = [
+    "automation",
+    "ci-cd",
+    "configuration",
+    "deployment",
+    "environment",
+    "infrastructure",
+    "jinja2",
+    "json",
+    "substitution",
+    "templates",
+    "toml",
+    "yaml",
+    ]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Text Processing :: Markup",
+    "Topic :: Utilities",
+]
+
+dependencies = [
+    "click==8.3.0",
+    "pyyaml==6.0.3",
+    "jinja2==3.1.6",
+    "wcmatch==10.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/rockdrilla/j2subst"
+"Bug Reports" = "https://github.com/rockdrilla/j2subst/issues"
+"Source Code" = "https://github.com/rockdrilla/j2subst"
+"Docker Image" = "https://hub.docker.com/r/rockdrilla/j2subst/tags"
+
+[project.scripts]
+j2subst = "j2subst.cli:cli"
+
+[build-system]
+requires = [
+    "setuptools>=80.9.0",
+    "wheel>=0.45.1",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = [ "." ]
+include = [ "j2subst*" ]
+
+[tool.setuptools.package-data]
+"*" = [ "*.j2", "*.json", "*.md", "*.toml", "*.txt", "*.yml", "*.yaml" ]
