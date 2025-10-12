@@ -1,6 +1,8 @@
 /.mypy_cache/
 /.vscode/
+/dist/
 /venv/
 
+*.egg-info/
 *.py[cdo]
 /**/__pycache__
