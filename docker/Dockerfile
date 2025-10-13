@@ -133,20 +133,16 @@ ENV J2SUBST_PYTHON_MODULES='netaddr psutil'
 
 ## Python cache warmup
 
-## "example.j2" requires:
-## 1) current working directory
-## 2) "J2SUBST_FN_FILTERS" ("--fn-filters")
-WORKDIR "${PYTHON_SITE_PACKAGES}/j2subst/tests"
-ENV J2SUBST_FN_FILTERS=1
+ENV _J2SUBST_TESTS="${PYTHON_SITE_PACKAGES}/j2subst/tests"
 
 ## not required for j2subst at all - just Python cache warmup
 ENV J2SUBST_DEBUG=1
 
-RUN j2subst example.j2 -
+RUN j2subst "${_J2SUBST_TESTS}/example.j2" -
 
 ## once again
 ENV PYTHONPROFILEIMPORTTIME=1
-RUN j2subst example.j2 -
+RUN j2subst "${_J2SUBST_TESTS}/example.j2" -
 
 ## Python cache adjustments
 WORKDIR /usr/local

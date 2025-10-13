@@ -112,10 +112,10 @@ list_intersect(y, x): {{ y | list_intersect(x) }}
 
 {% set x = '/var/www' -%}
 x = {{ repr(x) }}
-join_prefix(x, 'file.html'): {{ join_prefix(x, 'file.html') }}
-join_prefix(x, './file.html'): {{ join_prefix(x, './file.html') }}
-join_prefix(x, '/file.html'): {{ join_prefix(x, '/file.html') }}
-join_prefix(x, '../file.html'): {{ join_prefix(x, '../file.html') }}
+join_prefix(x, 'file.html'): {{ x | join_prefix('file.html') }}
+join_prefix(x, './file.html'): {{ x | join_prefix('./file.html') }}
+join_prefix(x, '/file.html'): {{ x | join_prefix('/file.html') }}
+join_prefix(x, '../file.html'): {{ x | join_prefix('../file.html') }}
 
 {% set x = 'example.j2' -%}
 x = {{ repr(x) }}
