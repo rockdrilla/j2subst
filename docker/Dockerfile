@@ -6,6 +6,8 @@ FROM ${BASE_IMAGE} AS base
 FROM base AS python-ext
 SHELL [ "/bin/sh", "-ec" ]
 
+ARG IMAGE_VERSION
+
 COPY /docker/scripts/*  /usr/local/sbin/
 
 COPY /j2subst/dist/requirements.txt  /tmp/
@@ -18,7 +20,23 @@ ENV CIBUILDWHEEL=1
 ## pyyaml
 ENV PYYAML_FORCE_CYTHON=1
 
-RUN w=$(mktemp -d) ; : "${w:?}" ; \
+RUN IMAGE_VERSION=$(printf '%s' "${IMAGE_VERSION}" | tr '[:upper:]' '[:lower:]') ; \
+    ## <development>
+    if [ "${IMAGE_VERSION}" = 'wip' ] ; then \
+        : > "${PYTHON_SITE_PACKAGES}/apt-deps.txt" ; \
+        unset CIBUILDWHEEL PYYAML_FORCE_CYTHON ; \
+        pip-env.sh \
+          pip install \
+            -r /tmp/requirements.txt \
+        ; \
+        pip-env.sh \
+          pip install \
+            -r /tmp/requirements-extra.txt \
+        ; \
+        exit 0 ; \
+    fi ; \
+    ## </development>
+    w=$(mktemp -d) ; : "${w:?}" ; \
     { apt-mark showauto ; apt-mark showmanual ; } | sort -uV > "$w/t0" ; \
     printf '%s\n' ${DEBIAN_DEV_PACKAGES} | sort -uV > "$w/t1" ; \
     apt-install.sh ${DEBIAN_DEV_PACKAGES} ; \
@@ -29,18 +47,18 @@ RUN w=$(mktemp -d) ; : "${w:?}" ; \
     grep -Ev -e '-(dev|doc)$' "$w/t4" > "${PYTHON_SITE_PACKAGES}/apt-deps.txt" ; \
     set -e ; \
     rm -rf "$w/" ; unset w ; \
-    apt-install.sh build-essential eatmydata ; \
+    apt-install.sh build-essential ; \
     python3 -m compileall -q -j 2 /usr/local ; \
     pip-env.sh \
       pip install \
         'cython~=3.1.4' \
     ; \
-    eatmydata pip-env.sh \
+    pip-env.sh \
       pip install \
         --no-binary "${PYTHON_BUILD_FROM_SOURCE}" \
         -r /tmp/requirements.txt \
     ; \
-    eatmydata pip-env.sh \
+    pip-env.sh \
       pip install \
         --no-binary "${PYTHON_BUILD_FROM_SOURCE}" \
         -r /tmp/requirements-extra.txt \
@@ -48,17 +66,6 @@ RUN w=$(mktemp -d) ; : "${w:?}" ; \
     pip-env.sh \
       pip uninstall -y \
         'cython' \
-    ; \
-    python-rm-cache.sh /usr/local ; \
-    rm -rf \
-      "${PYTHON_SITE_PACKAGES}/netaddr/tests" \
-      "${PYTHON_SITE_PACKAGES}/psutil/tests" \
-    ; \
-    truncate -s 0 \
-      "${PYTHON_SITE_PACKAGES}/netaddr/eui/iab.idx" \
-      "${PYTHON_SITE_PACKAGES}/netaddr/eui/iab.txt" \
-      "${PYTHON_SITE_PACKAGES}/netaddr/eui/oui.txt" \
-      "${PYTHON_SITE_PACKAGES}/netaddr/eui/oui.idx" \
     ; \
     find "${PYTHON_SITE_PACKAGES}/" -type f -name '*.so*' -exec ls -l {} + ; \
     echo ; \
@@ -70,6 +77,18 @@ RUN w=$(mktemp -d) ; : "${w:?}" ; \
     find "${PYTHON_SITE_PACKAGES}/" -type f -name '*.so*' -exec ls -l {} + ; \
     apt-remove.sh build-essential ; \
     apt-clean.sh
+
+RUN python-rm-cache.sh /usr/local ; \
+    rm -rf \
+      "${PYTHON_SITE_PACKAGES}/netaddr/tests" \
+      "${PYTHON_SITE_PACKAGES}/psutil/tests" \
+    ; \
+    truncate -s 0 \
+      "${PYTHON_SITE_PACKAGES}/netaddr/eui/iab.idx" \
+      "${PYTHON_SITE_PACKAGES}/netaddr/eui/iab.txt" \
+      "${PYTHON_SITE_PACKAGES}/netaddr/eui/oui.txt" \
+      "${PYTHON_SITE_PACKAGES}/netaddr/eui/oui.idx" \
+    ;
 
 ## avoid changing already present packages
 RUN rm -rfv \

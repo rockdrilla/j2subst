@@ -19,3 +19,4 @@ buildah bud \
   --pull=missing --no-cache \
   --ignorefile=docker/.dockerignore \
   --build-arg "BASE_IMAGE=${base}" \
+  --build-arg "IMAGE_VERSION=${IMAGE_VERSION}" \
