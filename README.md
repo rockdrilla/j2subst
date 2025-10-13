@@ -1,16 +1,16 @@
-# j2subst - Jinja2 Template Substitution Tool
+# j2subst - Jinja2 template substitution tool
 
 j2subst is a command-line tool for processing Jinja2 templates with configuration data from multiple sources. It's designed for use in CI/CD pipelines and configuration management workflows.
 
 ## Features
 
-- **Multiple Configuration Formats**: Supports YAML, JSON, and TOML configuration files
-- **Flexible Template Resolution**: Automatic template path resolution with placeholders
-- **Environment Variables**: Access to environment variables within templates
-- **Python Module Integration**: Import Python modules for advanced template logic
-- **Built-in Functions & Filters**: Comprehensive set of built-in Jinja2 filters and functions
-- **CI/CD Optimized**: Special behavior for CI/CD environments
-- **Dump Mode**: Export configuration data for debugging and inspection
+- **Multiple configuration formats**: Supports YAML, JSON, and TOML configuration files
+- **Flexible template resolution**: Automatic template path resolution with placeholders
+- **Environment variables**: Access to environment variables within templates
+- **Python module integration**: Import Python modules for advanced template logic
+- **Built-in functions & filters**: Comprehensive set of built-in Jinja2 filters and functions
+- **CI/CD aware**: Special behavior for CI/CD environments
+- **Dump mode**: Export configuration data for debugging and inspection
 
 ## Installation
 
@@ -26,9 +26,9 @@ docker pull docker.io/rockdrilla/j2subst
 pip install j2subst
 ```
 
-## Quick Start
+## Quick start
 
-### Docker Usage
+### Docker usage
 
 Docker image `docker.io/rockdrilla/j2subst` has several extra things done:
 1) entrypoint is set to `j2subst` script;
@@ -40,7 +40,7 @@ To simplify usage, the one may define shell alias:
 alias j2subst='docker run --rm -v "${PWD}:/w" docker.io/rockdrilla/j2subst '
 ```
 
-### Basic Usage
+### Basic usage
 
 Process a single template file:
 
@@ -50,7 +50,7 @@ j2subst template.j2
 
 This will process `template.j2` and output to `template` (removing the `.j2` extension).
 
-### Input/Output Specification
+### Input/output specification
 
 Process template with explicit input and output:
 
@@ -65,7 +65,7 @@ cat template.j2 | j2subst - > output.txt
 j2subst input.j2 -
 ```
 
-### Directory Processing
+### Directory processing
 
 Process all templates in a directory (no recursion):
 
@@ -81,7 +81,7 @@ j2subst --depth 3 /path/to/templates/
 
 ## Configuration
 
-### Configuration Files
+### Configuration files/directories
 
 j2subst can load configuration from multiple sources:
 
@@ -95,7 +95,7 @@ Supported formats:
 - JSON (`.json`)
 - TOML (`.toml`)
 
-### Template Paths
+### Template paths
 
 Specify template search paths:
 
@@ -111,14 +111,14 @@ Template path placeholders:
 
 *Nota bene*: `@{ORIGIN}` is unavailable when processing template from stdin.
 
-## Template Context
+## Template context
 
 Templates have access to two main dictionaries:
 
-- `{{ cfg }}` - Configuration data from files (default name)
-- `{{ env }}` - Environment variables (default name)
+- `{{ cfg }}` - Configuration data from files
+- `{{ env }}` - Environment variables
 
-### Example Template
+### Example template
 
 ```jinja2
 # config.j2
@@ -135,11 +135,29 @@ database:
   url: postgresql://localhost/mydb
 ```
 
-## Command Line Options
+Along with dictionaries above, the following variables are available:
 
-### Core Options
+- `{{ is_ci }}` - `True` if running in CI/CD environment, `False` otherwise
+- `{{ j2subst_file }}` - path to the currently processed template
+- `{{ j2subst_origin }}` - directory of the currently processed template
 
-- `--dump [FORMAT]` - Dump configuration to stdout (YAML/JSON) and exit
+*Nota bene*: `j2subst_file` and `j2subst_origin` are set to `None` when processing template from stdin.
+
+Example:
+```jinja2
+{% if is_ci %}
+  Running in CI environment
+{% endif %}
+
+{%- if j2subst_origin %}
+  {#- accessing files "near" template file -#}
+{%- endif %}
+```
+
+## Command line options
+
+### Core options
+
 - `--verbose, -v` - Increase verbosity (can be used multiple times)
 - `--quiet, -q` - Enable quiet mode (overrides "`--verbose`")
 - `--debug, -D` - Enable debug mode (prints debug messages to stderr; overrides "`--quiet`")
@@ -147,20 +165,22 @@ database:
 - `--force, -f` - Enable force mode (overwrite existing files)
 - `--unlink, -u` - Delete template files after processing
 
-### Configuration Options
+### Configuration options
 
 - `--config-path, -c PATH` - Colon-separated list of config files/directories
 - `--template-path, -t PATH` - Colon-separated list of template directories
 - `--depth, -d INTEGER` - Set recursion depth for directory processing (1-20)
 
-### Advanced Options
+### Advanced options
+
+- `--dump [FORMAT]` - Dump configuration to stdout (YAML/JSON) and exit
 
 - `--python-modules LIST` - Space-separated list of Python modules to import
-- `--fn-filters` - Propagate filters as functions too
+- `--fn-filters` - Propagate J2subst filters as functions too
 - `--dict-name-cfg NAME` - Custom name for configuration dictionary
 - `--dict-name-env NAME` - Custom name for environment dictionary
 
-### Help Options
+### Help options
 
 - `--help-cicd` - Show help for CI/CD behavior
 - `--help-click` - Show help for Click behavior
@@ -168,7 +188,7 @@ database:
 - `--help-env` - Show help for environment variables
 - `--help-template-path` - Show help for template paths
 
-## Environment Variables
+## Environment variables
 
 Corresponding environment variables are also supported:
 ```
@@ -198,7 +218,7 @@ See [Click documentation](https://click.palletsprojects.com/en/stable/options/#v
 - option `--depth` / variable `J2SUBST_DEPTH` defaults to `20` if running in CI/CD and `1` otherwise.
 - if argument list is empty then it set to current working directory.
 
-## Built-in Python Modules
+## Built-in Python modules
 
 The following Python modules are available by default in templates:
 
@@ -210,15 +230,23 @@ The following Python modules are available by default in templates:
 - `secrets`
 - `string`
 
-## Built-in Functions
+## Built-in functions
 
 Available built-in functions:
 
 - `bool`, `filter`, `isinstance`, `len`, `list`, `repr`, `set`, `sorted`, `str`, `type`
 
+Reference: [Built-in Functions](https://docs.python.org/3/library/functions.html)
+
+## Built-in filters
+
+Along with default [Jinja2 filters](https://jinja.palletsprojects.com/en/stable/templates/#builtin-filters), J2subst provides extra filters, see dedicated documentation [here](doc/filters.md).
+
+Direct link to GitHub: [doc/filters.md](https://github.com/rockdrilla/j2subst/blob/main/doc/filters.md)
+
 ## Examples
 
-### Dump Configuration
+### Dump configuration
 
 ```sh
 j2subst --dump
@@ -226,7 +254,7 @@ j2subst --dump json
 j2subst -c config.yml --dump
 ```
 
-### Import Custom Python Modules
+### Import custom Python modules
 
 ```sh
 j2subst --python-modules "myjson:json math" template.j2
@@ -236,7 +264,7 @@ This imports:
 - `json` module as `myjson`
 - `math` module as `math`
 
-### Custom Dictionary Names
+### Custom dictionary names
 
 ```sh
 j2subst --dict-name-cfg config --dict-name-env environment template.j2
@@ -248,9 +276,23 @@ Now use in templates:
 {{ environment.HOME }}
 ```
 
+### Propagate J2subst filters as functions
+
+```sh
+j2subst --fn-filters template.j2
+```
+
+Consider the following template:
+```jinja2
+{% set x = j2subst_origin | join_prefix('file.html') %}
+
+{# only available with "--fn-filters" #}
+{% set y = join_prefix(j2subst_origin, 'file.html') %}
+```
+
 ## Development
 
-### Building Docker Image
+### Building Docker image
 
 ```sh
 export IMAGE_VERSION=wip
