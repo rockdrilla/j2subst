@@ -524,6 +524,7 @@ def is_stdout(x: Any) -> bool:
 __j2subst_is_ci: bool | None = None
 
 
+## NB: not in J2SUBST_FUNCTIONS
 def is_ci(_x: Any = None) -> bool:
     # pylint: disable=W0603
     global __j2subst_is_ci
@@ -566,7 +567,6 @@ J2SUBST_FILTERS: list[Any] = [
     file_sha3_512,
     go_bool,
     go_bool_neg,
-    is_ci,
     is_file_io,
     is_file_io_read,
     is_file_io_write,

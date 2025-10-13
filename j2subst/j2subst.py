@@ -45,6 +45,7 @@ from .defaults import (
 from .functions import (
     J2SUBST_FILTERS,
     J2SUBST_FILTER_ALIASES,
+    is_ci,
     is_env_skipped,
     is_map,
     is_plain_key,
@@ -521,6 +522,20 @@ class J2subst:
 
         return self.j2env.overlay(**kw)
 
+    def __prepare_kwargs(self, j2subst_file: str | None, j2subst_origin: str | None) -> dict[str, Any]:
+        kw: dict[str, Any] = {
+            self.dict_cfg_name: self.dict_cfg,
+            self.dict_env_name: self.dict_env,
+        }
+        kw.update( {
+            ## hardcoded:
+            'is_ci': is_ci(),
+            'j2subst_file': j2subst_file,
+            'j2subst_origin': j2subst_origin,
+        } )
+
+        return kw
+
     def render_str(self, string: str, j2env_overlay: jinja2.Environment | None = None) -> tuple[str, str | None]:
         self.__verify_dump_only()
 
@@ -529,13 +544,7 @@ class J2subst:
             _env = self.env_overlay()
         t = _env.from_string(string)
 
-        kw: dict[str, Any] = {
-            self.dict_cfg_name: self.dict_cfg,
-            self.dict_env_name: self.dict_env,
-            ## hardcoded:
-            'j2subst_file': None,
-            'j2subst_origin': None,
-        }
+        kw = self.__prepare_kwargs(None, None)
 
         return t.render(**kw), None
 
@@ -572,13 +581,7 @@ class J2subst:
         t = _env.get_template(filename)
         _origin, _ = self.__resolve_origin(t.filename)
 
-        kw: dict[str, Any] = {
-            self.dict_cfg_name: self.dict_cfg,
-            self.dict_env_name: self.dict_env,
-            ## hardcoded:
-            'j2subst_file': t.filename,
-            'j2subst_origin': _origin,
-        }
+        kw = self.__prepare_kwargs(t.filename, _origin)
 
         return t.render(**kw), t.filename
 
