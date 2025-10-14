@@ -42,8 +42,9 @@ classifiers = [
 
 dependencies = [
     "click>=8.3.0,<8.4.0",
-    "pyyaml>=6.0.3,<6.1.0",
     "jinja2>=3.1.6,<3.2.0",
+    "natsort>=8.4.0,<8.5.0",
+    "pyyaml>=6.0.3,<6.1.0",
 ]
 
 [project.urls]

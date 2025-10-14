@@ -19,6 +19,8 @@ from typing import (
 
 ## jinja2
 import jinja2
+## natsort
+import natsort
 ## pyyaml
 import yaml
 
@@ -210,7 +212,7 @@ class J2subst:
                         continue
                     _entries.append(e)
 
-                for e in sorted(_entries):
+                for e in natsort.natsorted(_entries):
                     f = os.path.join(p, e)
                     if not os.path.isfile(f):
                         continue
@@ -719,7 +721,7 @@ class J2subst:
                 continue
             _entries.append(e)
 
-        for e in sorted(_entries):
+        for e in natsort.natsorted(_entries):
             p = os.path.join(directory, e)
 
             if os.path.isdir(p):
