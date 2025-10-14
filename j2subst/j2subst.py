@@ -21,8 +21,6 @@ from typing import (
 import jinja2
 ## pyyaml
 import yaml
-## wcmatch
-import wcmatch.wcmatch
 
 ## this module
 from .dumpfmt import J2substDumpFormat
@@ -56,11 +54,6 @@ from .functions import (
     non_empty_str,
     uniq,
 )
-
-
-## NB: no dot is required after wildcard - see "J2SUBST_CONFIG_EXT"
-J2SUBST_SEARCH_CONFIG_PATTERN = '|'.join( [ '*' + e for e in sorted(uniq(J2SUBST_CONFIG_EXT)) ] )
-J2SUBST_SEARCH_CONFIG_FLAGS = wcmatch.wcmatch.SYMLINKS
 
 
 class J2subst:
@@ -206,17 +199,27 @@ class J2subst:
                 if not self.merge_dict_from_file(p):
                     _warn(f'failed to load config file: {p}')
             elif os.path.isdir(p):
-                m = wcmatch.wcmatch.WcMatch(root_dir=str(p),
-                    file_pattern=J2SUBST_SEARCH_CONFIG_PATTERN,
-                    flags=J2SUBST_SEARCH_CONFIG_FLAGS,
-                )
-                for f in sorted(m.match()):
-                    # real_f = os.path.realpath(f)
-                    # if f == real_f:
-                    #     _info(f'try loading {f}')
-                    # else:
-                    #     _info(f'try loading {f} <- {real_f}')
-                    _info(f'try loading {f}')
+                _entries: list[str] = []
+                for e in os.listdir(p):
+                    if e.startswith('.'):
+                        ## silently ignore hidden files
+                        continue
+                    ext = os.path.splitext(e)[1]
+                    if (not ext) or ext not in J2SUBST_CONFIG_EXT:
+                        ## silently ignore non-recognized extensions
+                        continue
+                    _entries.append(e)
+
+                for e in sorted(_entries):
+                    f = os.path.join(p, e)
+                    if not os.path.isfile(f):
+                        continue
+
+                    real_f = os.path.realpath(f)
+                    if f == real_f:
+                        _info(f'try loading {f}')
+                    else:
+                        _info(f'try loading {f} <- {real_f}')
 
                     if not self.merge_dict_from_file(f):
                         _warn(f'failed to load config file: {f}')
@@ -465,9 +468,10 @@ class J2subst:
             return False
 
         ext = os.path.splitext(filename)[1]
-        # if ext not in J2SUBST_CONFIG_EXT:
-        #     __warn(f'non-recognized name extension: {repr(filename)}')
-        #     return False
+        if ext not in J2SUBST_CONFIG_EXT:
+            __warn(f'non-recognized name extension: {repr(filename)}')
+            return False
+
         if ext in [ '.yml', '.yaml' ]:
             self.merge_dict_from_yaml(filename)
         elif ext == '.toml':
@@ -475,6 +479,7 @@ class J2subst:
         elif ext == '.json':
             self.merge_dict_from_json(filename)
         else:
+            ## likely unreachable
             __warn(f'non-recognized name extension: {repr(filename)}')
             return False
 
@@ -707,18 +712,25 @@ class J2subst:
 
         rv = True
 
-        for e in sorted(os.listdir(directory)):
-            e = os.path.join(directory, e)
+        _entries: list[str] = []
+        for e in os.listdir(directory):
+            if e.startswith('.'):
+                ## silently ignore hidden files
+                continue
+            _entries.append(e)
 
-            if os.path.isdir(e):
+        for e in sorted(_entries):
+            p = os.path.join(directory, e)
+
+            if os.path.isdir(p):
                 if depth < 0:
-                    rv &= self.render_directory(e, depth, j2env_overlay)
+                    rv &= self.render_directory(p, depth, j2env_overlay)
                 else:
-                    rv &= self.render_directory(e, depth - 1, j2env_overlay)
+                    rv &= self.render_directory(p, depth - 1, j2env_overlay)
                 continue
 
-            if e.endswith(J2SUBST_TEMPLATE_EXT) and os.path.isfile(e):
-                rv &= self.render_file(e, None, j2env_overlay)
+            if e.endswith(J2SUBST_TEMPLATE_EXT) and os.path.isfile(p):
+                rv &= self.render_file(p, None, j2env_overlay)
                 continue
 
             __info(f'ignore: {e}')
