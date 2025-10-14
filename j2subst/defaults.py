@@ -6,7 +6,7 @@ from typing import (
 from .dumpfmt import J2substDumpFormat
 
 
-J2SUBST_VERSION = '0.0.3'
+J2SUBST_VERSION = '0.0.4'
 
 J2SUBST_DICT_NAME_CFG = 'cfg'
 J2SUBST_DICT_NAME_ENV = 'env'

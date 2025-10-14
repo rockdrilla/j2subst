@@ -1,6 +1,6 @@
 [project]
 name = "j2subst"
-version = "0.0.3"
+version = "0.0.4"
 description = "Jinja2 template substitution tool"
 authors = [
     { name = "Konstantin Demin", email = "rockdrilla@gmail.com" },
