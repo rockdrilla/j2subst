@@ -54,7 +54,6 @@ from .functions import (
     is_stdout,
     merge_dict_recurse,
     non_empty_str,
-    uniq,
 )
 
 
