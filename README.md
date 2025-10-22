@@ -1,3 +1,9 @@
+[![License][license-image]][license-link]
+[![PyPI Version][pypi-image]][pypi-link]
+[![PyPI - Python Version][python-versions-image]][pypi-link]
+[![PyPI Downloads][pypi-down-image]][pypi-link]
+[![Docker Images][docker-pulls-image]][docker-link]
+
 # j2subst - Jinja2 template substitution tool
 
 j2subst is a command-line tool for processing Jinja2 templates with configuration data from multiple sources. It's designed for use in CI/CD pipelines and configuration management workflows.
@@ -307,3 +313,12 @@ Apache-2.0
 - [spdx.org](https://spdx.org/licenses/Apache-2.0.html)
 - [opensource.org](https://opensource.org/licenses/Apache-2.0)
 - [apache.org](https://www.apache.org/licenses/LICENSE-2.0)
+
+[pypi-link]: https://pypi.python.org/pypi/j2subst
+[pypi-image]: https://img.shields.io/pypi/v/j2subst.svg?logo=pypi&logoColor=aaaaaa&labelColor=333333
+[pypi-down-image]: https://img.shields.io/pypi/dm/j2subst.svg?logo=pypi&logoColor=aaaaaa&labelColor=333333
+[python-versions-image]: https://img.shields.io/pypi/pyversions/j2subst?logo=python&logoColor=aaaaaa&labelColor=333333
+[license-link]: https://github.com/rockdrilla/j2subst/blob/main/LICENSE
+[license-image]: https://img.shields.io/badge/license-Apache2.0-blue.svg?labelColor=333333
+[docker-link]: https://hub.docker.com/r/rockdrilla/j2subst/tags
+[docker-pulls-image]: https://img.shields.io/docker/pulls/rockdrilla/j2subst
