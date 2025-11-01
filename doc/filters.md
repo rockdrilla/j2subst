@@ -79,20 +79,6 @@ Checks if the input is a valid plain key (alphanumeric + underscore, starting wi
 
 ### String Manipulation Filters
 
-#### `uniq(a: Sequence[Any]) -> list[Any]`
-Returns unique elements from a sequence.
-
-**Parameters:**
-- `a`: Input sequence
-
-**Returns:**
-- `list[Any]`: List of unique elements
-
-**Example:**
-```jinja2
-{{ [1, 2, 3, 2] | uniq }}  {# Output: [1, 2, 3] #}
-```
-
 #### `only_str(a: Sequence[Any]) -> list[str]`
 Filters sequence to only string or `os.PathLike` elements and converts them to strings.
 
@@ -111,14 +97,29 @@ Filters sequence to non-empty string or `os.PathLike` elements.
 **Returns:**
 - `list[str]`: List of non-empty string elements
 
-#### `uniq_str_list(a: Sequence[Any]) -> list[Any]`
+#### `uniq_str_list(a: Sequence[Any], *, keep_order: bool = True) -> list[Any]`
 Returns unique non-empty strings from a sequence.
 
 **Parameters:**
 - `a`: Input sequence
 
+**Keyword-only parameters:**
+- `keep_order`: preserve order of elements in sequence
+
 **Returns:**
 - `list[Any]`: List of unique non-empty strings
+
+**Example:**
+```jinja2
+{% set x = ['2','3','1','2'] -%}
+x = {{ repr(x) }}
+{{ ['2', '3', '1', '2'] | uniq_str_list }}                    {# Output: ['2', '3', '1'] #}
+{{ ['2', '3', '1', '2'] | uniq_str_list(keep_order=True) }}   {# Output: ['2', '3', '1'] #}
+{{ ['2', '3', '1', '2'] | uniq_str_list(keep_order=False) }}  {# Output: ['3', '2', '1'] #}
+```
+
+**Notes:**
+- set `keep_order` to `False` when working with relatively large sequences and/or when element order does not matter.
 
 #### `str_split_to_list(s: str, sep: str | re.Pattern[str] = r'\s+') -> list[str]`
 Splits a string by separator and returns non-empty parts.
@@ -300,6 +301,28 @@ Returns sorted dictionary keys with non-None values.
 - `list[Any]`: Sorted list of keys with non-None values
 
 ### List Operations
+
+#### `uniq(a: Sequence[Any], *, keep_order: bool = True) -> list[Any]`
+Returns unique elements from a sequence.
+
+**Parameters:**
+- `a`: Input sequence
+
+**Keyword-only parameters:**
+- `keep_order`: preserve order of elements in sequence
+
+**Returns:**
+- `list[Any]`: List of unique elements
+
+**Example:**
+```jinja2
+{{ [2, 3, 1, 2] | uniq }}                    {# Output: [2, 3, 1] #}
+{{ [2, 3, 1, 2] | uniq(keep_order=True) }}   {# Output: [2, 3, 1] #}
+{{ [2, 3, 1, 2] | uniq(keep_order=False) }}  {# Output: [1, 2, 3] #}
+```
+
+**Notes:**
+- set `keep_order` to `False` when working with relatively large sequences and/or when element order does not matter.
 
 #### `list_diff(a: Sequence[Any], b: Sequence[Any]) -> list[Any]`
 Returns elements in `a` but not in `b`.

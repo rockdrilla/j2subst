@@ -30,7 +30,7 @@ def is_str(x: Any) -> bool:
 
 
 def is_str_or_path(x: Any) -> bool:
-    return is_str(x) or isinstance(x, PathLike)
+    return isinstance(x, (str, PathLike))
 
 
 def is_seq(x: Any) -> bool:
@@ -51,34 +51,35 @@ def is_plain_key(x: Any | None) -> bool:
     return bool(re.fullmatch(r'[a-zA-Z_][a-zA-Z0-9_]*', str(x)))
 
 
-def uniq(a: Sequence[Any]) -> list[Any]:
+def uniq(a: Sequence[Any], *, keep_order: bool = True) -> list[Any]:
+    if keep_order:
+        return list(dict.fromkeys(a))
     return list(set(a))
 
 
 def only_str(a: Sequence[Any]) -> list[str]:
-    return [str(x) for x in filter(is_str_or_path, a)]
+    return [str(x) for x in a if is_str_or_path(x)]
 
 
 def non_empty_str(a: Sequence[Any]) -> list[str]:
-    return only_str(list(filter(None, a)))
+    return [str(x) for x in a if x and is_str_or_path(x)]
 
 
-def uniq_str_list(a: Sequence[Any]) -> list[Any]:
-    return uniq(non_empty_str(a))
+def uniq_str_list(a: Sequence[Any], *, keep_order: bool = True) -> list[str]:
+    return uniq(non_empty_str(a), keep_order=keep_order)
 
 
-def str_split_to_list(s: str, sep: str | re.Pattern[str] = r'\s+') -> list[str]:
+def str_split_to_list(s: str, sep: str | re.Pattern[str] | None = None) -> list[str]:
+    if (sep is None) or (sep == r'\s+'):
+        ## fastpath
+        return s.split()
+    if isinstance(sep, str):
+        return non_empty_str(s.split(sep))
     return non_empty_str(re.split(sep, s))
 
 
 def dict_to_str_list(x: dict[str, Any]) -> list[str]:
-    r: list[str] = []
-    for k in sorted(x.keys()):
-        if x[k] is None:
-            r.append(f'{k}')
-        else:
-            r.append(f'{k}={str(x[k])}')
-    return r
+    return [k if x[k] is None else f'{k}={str(x[k])}' for k in sorted(x)]
 
 
 def any_to_str_list(x: Any) -> list[str]:
@@ -199,9 +200,7 @@ def any_to_env_dict(x: Any) -> dict[str, str | None]:
             if m == '=':
                 k = k2
                 v = v2
-        if is_env_skipped(k) or (not is_plain_key(k)):
-            return
-        if k in h:
+        if is_env_skipped(k) or (not is_plain_key(k)) or (k in h):
             return
         if v is not None:
             v = str(v)
@@ -243,7 +242,7 @@ def list_intersect(a: Sequence[Any], b: Sequence[Any]) -> list[Any]:
 
 ## ref: https://click.palletsprojects.com/en/stable/options/#values-from-environment-variables
 def click_bool(x: Any) -> bool:
-    if is_str(x):
+    if is_str_or_path(x):
         return str(x).strip().lower() in { "1", "on", "t", "true", "y", "yes" }
     if isinstance(x, bool):
         return x
@@ -251,7 +250,7 @@ def click_bool(x: Any) -> bool:
 
 ## ref: https://click.palletsprojects.com/en/stable/options/#values-from-environment-variables
 def click_bool_neg(x: Any) -> bool:
-    if is_str(x):
+    if is_str_or_path(x):
         return str(x).strip().lower() in { "0", "f", "false", "n", "no", "off" }
     if isinstance(x, bool):
         return not x
@@ -261,7 +260,7 @@ def click_bool_neg(x: Any) -> bool:
 ## ref: https://pkg.go.dev/strconv#ParseBool
 ## behavior is mostly the same except no errors for invalid values
 def go_bool(x: Any) -> bool:
-    if is_str(x):
+    if is_str_or_path(x):
         return str(x) in { "1", "T", "TRUE", "True", "t", "true" }
     if isinstance(x, bool):
         return x
@@ -270,7 +269,7 @@ def go_bool(x: Any) -> bool:
 ## ref: https://pkg.go.dev/strconv#ParseBool
 ## behavior is mostly the same except no errors for invalid values
 def go_bool_neg(x: Any) -> bool:
-    if is_str(x):
+    if is_str_or_path(x):
         return str(x) in { "0", "F", "FALSE", "False", "f", "false" }
     if isinstance(x, bool):
         return not x
@@ -278,47 +277,54 @@ def go_bool_neg(x: Any) -> bool:
 
 
 ## NB: not in J2SUBST_FUNCTIONS
-def merge_dict_recurse(d1: dict[Any, Any] | None, d2: dict[Any, Any] | None) -> dict[Any, Any]:
+def merge_dict_recurse(d1: dict[Any, Any] | None, d2: dict[Any, Any] | None, *, merge_seq: bool = True) -> dict[Any, Any]:
     x: dict[Any, Any] = {}
     if d1:
-        x = x | d1
+        x.update(d1)
     if not d2:
         return x
 
-    keys1 = set(x.keys())
-    keys2 = set(d2.keys())
-    common = keys1 & keys2
-    missing = keys2 - common
+    for k in d2:
+        b = d2[k] ## shortcut
 
-    map1 = {k for k in common if is_map(x.get(k))}
-    seq1 = {k for k in common if is_seq(x.get(k))}
-    misc1 = common - seq1 - map1
-
-    merge_safe = missing | misc1
-    x.update({k: d2.get(k) for k in merge_safe})
-
-    map_common = {k for k in map1 if is_map(d2.get(k))}
-    for k in map_common:
-        y = d2.get(k)
-        if not y:
-            x[k] = {}
+        if k not in x:
+            x[k] = b
             continue
-        x[k] = merge_dict_recurse(x.get(k), y)
 
-    seq_common = {k for k in seq1 if is_seq(d2.get(k))}
-    for k in seq_common:
-        y = d2.get(k)
-        if not y:
-            x[k] = []
+        a = x[k] ## shortcut
+
+        if is_map(a) and is_map(b):
+            if not b:
+                ## replace
+                x[k] = {}
+                continue
+
+            ## merge
+            x[k] = merge_dict_recurse(a, b, merge_seq=merge_seq)
+
+        elif is_seq(a) and is_seq(b):
+            if not b:
+                ## replace
+                x[k] = []
+                continue
+
+            if not merge_seq:
+                ## replace
+                x[k] = b
+                continue
+
+            _new = list(a) + list(b)
+            if all(is_scalar(v) for v in _new):
+                ## merge
+                x[k] = uniq(_new)
+            else:
+                ## append
+                x[k] = _new
             continue
-        ## TYPING-TODO
-        x[k] = uniq(list(x.get(k)) + list(y))
 
-    unmerged = (map1 - map_common) | (seq1 - seq_common)
-    for k in unmerged:
-        t1 = type(x.get(k))
-        t2 = type(d2.get(k))
-        print(f'J2subst: merge_dict_recurse(): skipping key {k} due to type mismatch: {t1} vs. {t2}', file=sys.stderr)
+        else:
+            ## replace (no matter of type)
+            x[k] = d2[k]
 
     return x
 
@@ -338,81 +344,81 @@ def join_prefix(prefix: str, *paths: Any) -> str:
     return rv
 
 
-def md5(x: str) -> str:
-    return hashlib.md5(x.encode('utf-8')).hexdigest()
+def md5(x: str | PathLike[str]) -> str:
+    return hashlib.md5(str(x).encode('utf-8')).hexdigest()
 
 
-def sha1(x: str) -> str:
-    return hashlib.sha1(x.encode('utf-8')).hexdigest()
+def sha1(x: str | PathLike[str]) -> str:
+    return hashlib.sha1(str(x).encode('utf-8')).hexdigest()
 
 
-def sha256(x: str) -> str:
-    return hashlib.sha256(x.encode('utf-8')).hexdigest()
+def sha256(x: str | PathLike[str]) -> str:
+    return hashlib.sha256(str(x).encode('utf-8')).hexdigest()
 
 
-def sha384(x: str) -> str:
-    return hashlib.sha384(x.encode('utf-8')).hexdigest()
+def sha384(x: str | PathLike[str]) -> str:
+    return hashlib.sha384(str(x).encode('utf-8')).hexdigest()
 
 
-def sha512(x: str) -> str:
-    return hashlib.sha512(x.encode('utf-8')).hexdigest()
+def sha512(x: str | PathLike[str]) -> str:
+    return hashlib.sha512(str(x).encode('utf-8')).hexdigest()
 
 
-def sha3_256(x: str) -> str:
-    return hashlib.sha3_256(x.encode('utf-8')).hexdigest()
+def sha3_256(x: str | PathLike[str]) -> str:
+    return hashlib.sha3_256(str(x).encode('utf-8')).hexdigest()
 
 
-def sha3_384(x: str) -> str:
-    return hashlib.sha3_384(x.encode('utf-8')).hexdigest()
+def sha3_384(x: str | PathLike[str]) -> str:
+    return hashlib.sha3_384(str(x).encode('utf-8')).hexdigest()
 
 
-def sha3_512(x: str) -> str:
-    return hashlib.sha3_512(x.encode('utf-8')).hexdigest()
+def sha3_512(x: str | PathLike[str]) -> str:
+    return hashlib.sha3_512(str(x).encode('utf-8')).hexdigest()
 
 
-def file_md5(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_md5(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.md5(f.read()).hexdigest()
 
 
-def file_sha1(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha1(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha1(f.read()).hexdigest()
 
 
-def file_sha256(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha256(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha256(f.read()).hexdigest()
 
 
-def file_sha384(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha384(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha384(f.read()).hexdigest()
 
 
-def file_sha512(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha512(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha512(f.read()).hexdigest()
 
 
-def file_sha3_256(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha3_256(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha3_256(f.read()).hexdigest()
 
 
-def file_sha3_384(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha3_384(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha3_384(f.read()).hexdigest()
 
 
-def file_sha3_512(x: str) -> str:
-    with open(x, 'rb') as f:
+def file_sha3_512(x: str | PathLike[str]) -> str:
+    with open(str(x), 'rb') as f:
         return hashlib.sha3_512(f.read()).hexdigest()
 
 
 ## NB: not in J2SUBST_FUNCTIONS
 def is_env_skipped(x: Any) -> bool:
-    if not is_str(x):
+    if not is_str_or_path(x):
         return True
     x = str(x)
     for r in J2SUBST_ENV_SKIP:
@@ -610,5 +616,5 @@ J2SUBST_FILTERS: list[Any] = [
 ]
 
 J2SUBST_FILTER_ALIASES: dict[str, Any] = {
-    'j2e': j2subst_escape,
+    'j2e': j2subst_escape, ## shorthand
 }
