@@ -54,6 +54,20 @@ Checks if the input is a mapping (dictionary-like object).
 **Returns:**
 - `bool`: `True` if `x` is a mapping, `False` otherwise
 
+#### `is_scalar(x: Any) -> bool`
+Checks if the input is a simple, hashable object (not a sequence or mapping).
+
+**Parameters:**
+- `x`: Any value to check
+
+**Returns:**
+- `bool`: `True` if `x` is hashable and neither a sequence nor mapping, `False` otherwise
+
+**Notes:**
+
+"Hashable" refers to Python's official definition of immutable, hash-supporting objects.
+See [Python Glossary - Hashable](https://docs.python.org/3/glossary.html#term-hashable).
+
 #### `is_plain_key(x: Any | None) -> bool`
 Checks if the input is a valid plain key (alphanumeric + underscore, starting with letter/underscore).
 

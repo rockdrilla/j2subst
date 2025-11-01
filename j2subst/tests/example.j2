@@ -20,6 +20,7 @@ x = {{ repr(x) }}
 is_str(x): {{ x | is_str }}
 is_seq(x): {{ x | is_seq }}
 is_map(x): {{ x | is_map }}
+is_scalar(x): {{ x | is_scalar }}
 any_to_str_list(x): {{ x | any_to_str_list }}
 
 {% set x = [1,2,3,4] -%}
@@ -27,6 +28,7 @@ x = {{ repr(x) }}
 is_str(x): {{ x | is_str }}
 is_seq(x): {{ x | is_seq }}
 is_map(x): {{ x | is_map }}
+is_scalar(x): {{ x | is_scalar }}
 any_to_str_list(x): {{ x | any_to_str_list }}
 
 {% set x = {1:2,3:4} -%}
@@ -34,6 +36,7 @@ x = {{ repr(x) }}
 is_str(x): {{ x | is_str }}
 is_seq(x): {{ x | is_seq }}
 is_map(x): {{ x | is_map }}
+is_scalar(x): {{ x | is_scalar }}
 any_to_str_list(x): {{ x | any_to_str_list }}
 
 {% set x = [2,3,1,2] -%}

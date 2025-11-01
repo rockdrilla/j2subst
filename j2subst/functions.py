@@ -6,6 +6,7 @@ import re
 import sys
 
 from collections.abc import (
+    Hashable,
     Mapping,
     Sequence,
 )
@@ -38,6 +39,10 @@ def is_seq(x: Any) -> bool:
 
 def is_map(x: Any) -> bool:
     return isinstance(x, Mapping)
+
+
+def is_scalar(x: Any) -> bool:
+    return isinstance(x, Hashable) and (not is_map(x)) and (not is_seq(x))
 
 
 def is_plain_key(x: Any | None) -> bool:
@@ -574,6 +579,7 @@ J2SUBST_FILTERS: list[Any] = [
     is_plain_key,
     is_re_fullmatch,
     is_re_match,
+    is_scalar,
     is_seq,
     is_stdin,
     is_stdout,
