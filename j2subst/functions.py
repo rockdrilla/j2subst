@@ -18,6 +18,9 @@ from typing import (
     Callable,
 )
 
+## natsort
+import natsort
+
 ## this module
 from .defaults import (
     J2SUBST_ENV_CI,
@@ -617,4 +620,5 @@ J2SUBST_FUNCTIONS: list[Any] = [
 
 J2SUBST_FUNCTION_ALIASES: dict[str, Any] = {
     'j2e': j2subst_escape, ## shorthand
+    'natsorted': natsort.natsorted,
 }

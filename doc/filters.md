@@ -354,6 +354,18 @@ Returns elements common to both `a` and `b`.
 {{ [1, 2, 3] | list_intersect([2, 3, 4]) }}  {# Output: [2, 3] #}
 ```
 
+#### `natsorted(a: Sequence[Any]) -> list[Any]`
+Returns naturally sorted elements from a sequence.
+
+**Parameters:**
+- `a`: Input sequence
+
+**Returns:**
+- `list[Any]`: List of naturally sorted elements
+
+**Notes:**
+- this is shorthand for `natsort.natsorted` from `natsort` package.
+
 ### Boolean Conversion Filters
 
 #### `click_bool(x: Any) -> bool`
