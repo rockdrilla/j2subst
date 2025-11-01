@@ -182,7 +182,6 @@ Example:
 - `--dump [FORMAT]` - Dump configuration to stdout (YAML/JSON) and exit
 
 - `--python-modules LIST` - Space-separated list of Python modules to import
-- `--fn-filters` - Propagate J2subst filters as functions too
 - `--dict-name-cfg NAME` - Custom name for configuration dictionary
 - `--dict-name-env NAME` - Custom name for environment dictionary
 
@@ -211,7 +210,6 @@ Corresponding environment variables are also supported:
 | J2SUBST_CONFIG_PATH    | --config-path    | string  |
 | J2SUBST_TEMPLATE_PATH  | --template-path  | string  |
 | J2SUBST_PYTHON_MODULES | --python-modules | string  |
-| J2SUBST_FN_FILTERS     | --fn-filters     | flag    |
 | J2SUBST_DICT_NAME_CFG  | --dict-name-cfg  | string  |
 | J2SUBST_DICT_NAME_ENV  | --dict-name-env  | string  |
 |------------------------+------------------+---------|
@@ -280,20 +278,6 @@ Now use in templates:
 ```jinja2
 {{ config.server.name }}
 {{ environment.HOME }}
-```
-
-### Propagate J2subst filters as functions
-
-```sh
-j2subst --fn-filters template.j2
-```
-
-Consider the following template:
-```jinja2
-{% set x = j2subst_origin | join_prefix('file.html') %}
-
-{# only available with "--fn-filters" #}
-{% set y = join_prefix(j2subst_origin, 'file.html') %}
 ```
 
 ## Development

@@ -66,7 +66,6 @@ Corresponding environment variables are also supported.
 | J2SUBST_CONFIG_PATH    | --config-path    | string  |
 | J2SUBST_TEMPLATE_PATH  | --template-path  | string  |
 | J2SUBST_PYTHON_MODULES | --python-modules | string  |
-| J2SUBST_FN_FILTERS     | --fn-filters     | flag    |
 | J2SUBST_DICT_NAME_CFG  | --dict-name-cfg  | string  |
 | J2SUBST_DICT_NAME_ENV  | --dict-name-env  | string  |
 |------------------------+------------------+---------|

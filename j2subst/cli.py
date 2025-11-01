@@ -181,11 +181,6 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
     help=J2SUBST_CLI_HELP_PYTHON_MODULES,
     metavar='LIST',
 )
-@click.option('--fn-filters',
-    'o_fn_filters', is_flag=True,
-    envvar='J2SUBST_FN_FILTERS',
-    help='Propagate filters as functions too.',
-)
 @click.option('--dict-name-cfg',
     'o_dict_name_cfg',
     envvar='J2SUBST_DICT_NAME_CFG',
@@ -225,7 +220,6 @@ def cli(ctx: click.Context,
         o_template_path: str | None,
 
         o_python_modules: str | None,
-        o_fn_filters: bool,
         o_dict_name_cfg: str | None,
         o_dict_name_env: str | None,
 
@@ -262,7 +256,6 @@ def cli(ctx: click.Context,
         __dump_usage_error('o_template_path', '--template-path')
 
         __dump_usage_error('o_python_modules', '--python-modules')
-        __dump_usage_error('o_fn_filters',     '--fn-filters')
         __dump_usage_error('o_dict_name_cfg',  '--dict-name-cfg')
         __dump_usage_error('o_dict_name_env',  '--dict-name-env')
 
@@ -346,7 +339,6 @@ def cli(ctx: click.Context,
             template_path=_template_path,
 
             python_modules=_python_modules,
-            filters_as_functions=o_fn_filters,
             dict_name_cfg=o_dict_name_cfg,
             dict_name_env=o_dict_name_env,
     )

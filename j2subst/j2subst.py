@@ -43,8 +43,8 @@ from .defaults import (
     J2SUBST_TEMPLATE_PATH_PARTS,
 )
 from .functions import (
-    J2SUBST_FILTERS,
-    J2SUBST_FILTER_ALIASES,
+    J2SUBST_FUNCTIONS,
+    J2SUBST_FUNCTION_ALIASES,
     is_ci,
     is_env_skipped,
     is_map,
@@ -72,7 +72,6 @@ class J2subst:
                  template_path: Sequence[str | PathLike[str]] | None = None,
 
                  python_modules: Sequence[str] | Mapping[str, str] | None = None,
-                 filters_as_functions: bool = False,
                  dict_name_cfg: str = J2SUBST_DICT_NAME_CFG,
                  dict_name_env: str = J2SUBST_DICT_NAME_ENV,
     ):
@@ -157,16 +156,15 @@ class J2subst:
         for alias, f in J2SUBST_BUILTIN_FUNCTION_ALIASES.items():
             self.import_builtin_function(f, alias)
 
-        for f in J2SUBST_FILTERS:
+        for f in J2SUBST_FUNCTIONS:
             self.import_filter(f)
-        for alias, f in J2SUBST_FILTER_ALIASES.items():
+        for alias, f in J2SUBST_FUNCTION_ALIASES.items():
             self.import_filter(f, alias)
 
-        if filters_as_functions:
-            for f in J2SUBST_FILTERS:
-                self.import_function(f)
-            for alias, f in J2SUBST_FILTER_ALIASES.items():
-                self.import_function(f, alias)
+        for f in J2SUBST_FUNCTIONS:
+            self.import_function(f)
+        for alias, f in J2SUBST_FUNCTION_ALIASES.items():
+            self.import_function(f, alias)
 
     def __verify_dump_only(self):
         if not self.dump_only:

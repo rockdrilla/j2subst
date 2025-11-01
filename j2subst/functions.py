@@ -558,7 +558,7 @@ def is_ci(_x: Any = None) -> bool:
     return __j2subst_is_ci
 
 
-J2SUBST_FILTERS: list[Any] = [
+J2SUBST_FUNCTIONS: list[Any] = [
     any_to_env_dict,
     any_to_str_list,
     click_bool,
@@ -615,6 +615,6 @@ J2SUBST_FILTERS: list[Any] = [
     uniq_str_list,
 ]
 
-J2SUBST_FILTER_ALIASES: dict[str, Any] = {
+J2SUBST_FUNCTION_ALIASES: dict[str, Any] = {
     'j2e': j2subst_escape, ## shorthand
 }
