@@ -8,7 +8,7 @@ BUILDAH_ISOLATION="${BUILDAH_ISOLATION:-chroot}"
 BUILDAH_NETWORK="${BUILDAH_NETWORK:-host}"
 set +a
 
-PYTHONTAG="${PYTHONTAG:-3.13.8-slim-trixie}"
+PYTHONTAG="${PYTHONTAG:-3.13.9-slim-trixie}"
 
 grab_site_packages() {
 	podman run \

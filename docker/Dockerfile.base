@@ -1,4 +1,4 @@
-ARG PYTHONTAG=3.13.8-slim-trixie
+ARG PYTHONTAG=3.13.9-slim-trixie
 FROM docker.io/python:${PYTHONTAG} AS base-upstream
 
 FROM base-upstream AS base-intermediate
