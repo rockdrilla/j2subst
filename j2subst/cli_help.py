@@ -8,9 +8,6 @@ from .defaults import (
     J2SUBST_EMPTY_YAML,
     J2SUBST_MAX_DEPTH,
 )
-from .functions import (
-    re_sub,
-)
 
 
 J2SUBST_CLI_HELP__DUMP = f'''
@@ -22,11 +19,11 @@ Format name is case-insensitive.
 
 Empty config in YAML format is equivalent to:
 
-{re_sub(J2SUBST_EMPTY_YAML.strip(), '^', ' ' * 2, opt = re.MULTILINE)}
+{re.sub('^', ' ' * 2, J2SUBST_EMPTY_YAML.strip(), flags = re.MULTILINE)}
 
 Empty config in JSON format is equivalent to:
 
-{re_sub(J2SUBST_EMPTY_JSON.strip(), '^', ' ' * 2, opt = re.MULTILINE)}
+{re.sub('^', ' ' * 2, J2SUBST_EMPTY_JSON.strip(), flags = re.MULTILINE)}
 '''
 
 
@@ -66,6 +63,7 @@ Corresponding environment variables are also supported.
 | J2SUBST_CONFIG_PATH    | --config-path    | string  |
 | J2SUBST_TEMPLATE_PATH  | --template-path  | string  |
 | J2SUBST_PYTHON_MODULES | --python-modules | string  |
+| J2SUBST_MIXINS         | --mixins         | flag    |
 |------------------------+------------------+---------|
 
 See "--help-click" for more details about how Click handles environment variables, especially for flag options.

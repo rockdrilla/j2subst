@@ -180,6 +180,12 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
     metavar='LIST',
 )
 
+@click.option('--mixins',
+    'o_mixins', is_flag=True,
+    envvar='J2SUBST_MIXINS',
+    help='Load Python mixins from config path.',
+)
+
 @click.argument('cli_args',
     nargs=-1,
     metavar='[ARGUMENTS]',
@@ -208,6 +214,7 @@ def cli(ctx: click.Context,
         o_template_path: str | None,
 
         o_python_modules: str | None,
+        o_mixins: bool,
 
         cli_args: tuple[str],
 ):
@@ -242,6 +249,7 @@ def cli(ctx: click.Context,
         __dump_usage_error('o_template_path', '--template-path')
 
         __dump_usage_error('o_python_modules', '--python-modules')
+        __dump_usage_error('o_mixins',         '--mixins')
 
         ## TODO: support --dump with output file name
         if len(list(cli_args)) > 0:
@@ -318,6 +326,7 @@ def cli(ctx: click.Context,
             template_path=_template_path,
 
             python_modules=_python_modules,
+            enable_mixins=o_mixins,
     )
 
     ## deal with 1/2 argument mode

@@ -138,11 +138,17 @@ ENV _J2SUBST_TESTS="${PYTHON_SITE_PACKAGES}/j2subst/tests"
 ## not required for j2subst at all - just Python cache warmup
 ENV J2SUBST_DEBUG=1
 
-RUN j2subst "${_J2SUBST_TESTS}/example.j2" -
-
-## once again
-ENV PYTHONPROFILEIMPORTTIME=1
-RUN j2subst "${_J2SUBST_TESTS}/example.j2" -
+RUN for i in 1 2 ; do \
+      j2subst \
+        "${_J2SUBST_TESTS}/example.j2" - ; \
+      echo ; \
+      j2subst \
+        --mixins \
+        --config-path "${_J2SUBST_TESTS}/mixin" \
+        "${_J2SUBST_TESTS}/mixin/example.j2" - ; \
+      echo ; \
+      export PYTHONPROFILEIMPORTTIME=1 ; \
+    done
 
 ## Python cache adjustments
 WORKDIR /usr/local
