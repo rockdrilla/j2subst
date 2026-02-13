@@ -1,4 +1,4 @@
-ARG PYTHONTAG=3.13.9-slim-trixie
+ARG PYTHONTAG=3.13.12-slim-trixie
 FROM docker.io/python:${PYTHONTAG} AS base-upstream
 
 FROM base-upstream AS base-intermediate
@@ -18,14 +18,11 @@ ENV PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-COPY /docker/apt/sources.debian  /etc/apt/sources.list.d/debian.sources
-
-## backports done by me
-RUN mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
-ADD https://deb.krd.sh/krdeb.gpg.asc  /etc/apt/keyrings/krdeb.gpg.asc
-COPY /docker/apt/sources.krdeb        /etc/apt/sources.list.d/krdeb.sources
-RUN f='/etc/apt/keyrings/krdeb.gpg.asc /etc/apt/sources.list.d/krdeb.sources' ; \
-    chown root:root $f ; chmod 0644 $f
+## adjust APT configuration
+RUN rm -rf /etc/apt/sources.list /etc/apt/sources.list.d ; \
+    mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
+ADD  --chown=0:0 --chmod=0644 https://deb.krd.sh/krdeb.gpg.asc  /etc/apt/keyrings/krdeb.gpg.asc
+COPY --chown=0:0 --chmod=0644 /docker/apt/                      /etc/apt/
 
 ## prevent services from auto-starting, part 1
 RUN s='/usr/sbin/policy-rc.d' ; b='/usr/bin/policy-rc.d' ; \
@@ -267,8 +264,8 @@ RUN env -C /root rm -f .bash_history .python_history .wget-hsts
 FROM base-intermediate AS certs
 SHELL [ "/bin/sh", "-ec" ]
 
-## "2025.10.05"
-ENV CERTIFI_COMMIT=fb14ac49a976b1695d84b1ac1307276a20b3aac9
+## "2026.01.04"
+ENV CERTIFI_COMMIT=c64d9f3a8496c0195548697f2080e716af66dd6a
 
 # ARG CERTIFI_BASE_URI='https://raw.githubusercontent.com/certifi/python-certifi'
 ARG CERTIFI_BASE_URI='https://github.com/certifi/python-certifi/raw'

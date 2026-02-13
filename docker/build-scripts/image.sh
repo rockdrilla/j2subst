@@ -10,7 +10,7 @@ BUILDAH_ISOLATION="${BUILDAH_ISOLATION:-chroot}"
 BUILDAH_NETWORK="${BUILDAH_NETWORK:-host}"
 set +a
 
-base="docker.io/rockdrilla/j2subst:base-v1"
+base="docker.io/rockdrilla/j2subst:base-v2"
 img="docker.io/rockdrilla/j2subst:${IMAGE_VERSION}$2"
 
 buildah bud \

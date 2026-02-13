@@ -1,5 +1,5 @@
 Types: deb
 URIs: http://deb.krd.sh/trixie
-Suites: trixie-backports
+Suites: backports
 Components: main
 Signed-By: /etc/apt/keyrings/krdeb.gpg.asc

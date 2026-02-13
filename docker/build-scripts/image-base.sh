@@ -8,7 +8,7 @@ BUILDAH_ISOLATION="${BUILDAH_ISOLATION:-chroot}"
 BUILDAH_NETWORK="${BUILDAH_NETWORK:-host}"
 set +a
 
-PYTHONTAG="${PYTHONTAG:-3.13.9-slim-trixie}"
+PYTHONTAG="${PYTHONTAG:-3.13.12-slim-trixie}"
 
 grab_site_packages() {
 	podman run \
@@ -27,7 +27,7 @@ grab_site_packages() {
 PYTHON_SITE_PACKAGES=$(grab_site_packages "docker.io/python:${PYTHONTAG}")
 [ -n "${PYTHON_SITE_PACKAGES:?}" ]
 
-base="docker.io/rockdrilla/j2subst:base-v1"
+base="docker.io/rockdrilla/j2subst:base-v2"
 
 buildah bud \
   -f docker/Dockerfile.base \
