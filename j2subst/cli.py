@@ -13,8 +13,6 @@ import click.core
 ## this module
 from .dumpfmt import J2substDumpFormat
 from .defaults import (
-    J2SUBST_DICT_NAME_CFG,
-    J2SUBST_DICT_NAME_ENV,
     J2SUBST_DUMP_FORMAT,
     J2SUBST_MAX_DEPTH,
     J2SUBST_TEMPLATE_PATH_PARTS,
@@ -181,16 +179,6 @@ J2SUBST_CLI_CONTEXT_SETTINGS = {
     help=J2SUBST_CLI_HELP_PYTHON_MODULES,
     metavar='LIST',
 )
-@click.option('--dict-name-cfg',
-    'o_dict_name_cfg',
-    envvar='J2SUBST_DICT_NAME_CFG',
-    help='Assign configuration dictionary name to custom value.',
-)
-@click.option('--dict-name-env',
-    'o_dict_name_env',
-    envvar='J2SUBST_DICT_NAME_ENV',
-    help='Assign environment dictionary name to custom value.',
-)
 
 @click.argument('cli_args',
     nargs=-1,
@@ -220,8 +208,6 @@ def cli(ctx: click.Context,
         o_template_path: str | None,
 
         o_python_modules: str | None,
-        o_dict_name_cfg: str | None,
-        o_dict_name_env: str | None,
 
         cli_args: tuple[str],
 ):
@@ -256,8 +242,6 @@ def cli(ctx: click.Context,
         __dump_usage_error('o_template_path', '--template-path')
 
         __dump_usage_error('o_python_modules', '--python-modules')
-        __dump_usage_error('o_dict_name_cfg',  '--dict-name-cfg')
-        __dump_usage_error('o_dict_name_env',  '--dict-name-env')
 
         ## TODO: support --dump with output file name
         if len(list(cli_args)) > 0:
@@ -300,11 +284,6 @@ def cli(ctx: click.Context,
     else:
         _template_path = str_split_to_list(o_template_path, ':')
 
-    if o_dict_name_cfg is None:
-        o_dict_name_cfg = J2SUBST_DICT_NAME_CFG
-    if o_dict_name_env is None:
-        o_dict_name_env = J2SUBST_DICT_NAME_ENV
-
     _python_modules: dict[str,str] = {}
     if o_python_modules is not None:
         _modules = str_split_to_list(o_python_modules)
@@ -339,8 +318,6 @@ def cli(ctx: click.Context,
             template_path=_template_path,
 
             python_modules=_python_modules,
-            dict_name_cfg=o_dict_name_cfg,
-            dict_name_env=o_dict_name_env,
     )
 
     ## deal with 1/2 argument mode

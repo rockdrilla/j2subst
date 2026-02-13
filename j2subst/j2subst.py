@@ -30,8 +30,6 @@ from .defaults import (
     J2SUBST_BUILTIN_FUNCTION_ALIASES,
     J2SUBST_BUILTIN_FUNCTIONS,
     J2SUBST_CONFIG_EXT,
-    J2SUBST_DICT_NAME_CFG,
-    J2SUBST_DICT_NAME_ENV,
     J2SUBST_DUMP_FORMAT,
     J2SUBST_EMPTY_JSON,
     J2SUBST_EMPTY_YAML,
@@ -72,18 +70,9 @@ class J2subst:
                  template_path: Sequence[str | PathLike[str]] | None = None,
 
                  python_modules: Sequence[str] | Mapping[str, str] | None = None,
-                 dict_name_cfg: str = J2SUBST_DICT_NAME_CFG,
-                 dict_name_env: str = J2SUBST_DICT_NAME_ENV,
     ):
 
         self.dump_only = bool(dump_only)
-        if not self.dump_only:
-            if not is_plain_key(dict_name_cfg):
-                raise ValueError(f'not valid "dict_name_cfg": {repr(dict_name_cfg)}')
-            self.dict_cfg_name = dict_name_cfg
-            if not is_plain_key(dict_name_env):
-                raise ValueError(f'not valid "dict_name_env": {repr(dict_name_env)}')
-            self.dict_env_name = dict_name_env
 
         self.debug = bool(debug)
         self.verbosity = int(verbosity)
@@ -528,9 +517,10 @@ class J2subst:
 
     def __prepare_kwargs(self, j2subst_file: str | None, j2subst_origin: str | None) -> dict[str, Any]:
         kw: dict[str, Any] = {
-            self.dict_cfg_name: self.dict_cfg,
-            self.dict_env_name: self.dict_env,
+            ## hardcoded:
+            'env': self.dict_env,
         }
+        kw.update(self.dict_cfg)
         kw.update( {
             ## hardcoded:
             'is_ci': is_ci(),

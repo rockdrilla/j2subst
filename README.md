@@ -20,31 +20,19 @@ j2subst is a command-line tool for processing Jinja2 templates with configuratio
 
 ## Installation
 
-### Using Docker
-
-```sh
-docker pull docker.io/rockdrilla/j2subst
-```
-
 ### From PyPI
 
 ```sh
 pip install j2subst
 ```
 
-## Quick start
+### Using Docker
 
-### Docker usage
-
-Docker image `docker.io/rockdrilla/j2subst` has several extra things done:
-1) entrypoint is set to `j2subst` script;
-2) current working directory is set to "`/w`" and it's volume.
-3) environment variable `J2SUBST_PYTHON_MODULES` is set to `"netaddr psutil"` - these packages are installed via `pip` and they are not dependencies in any kind, but provided for better usability; see file `docker/requirements-extra.txt`.
-
-To simplify usage, the one may define shell alias:
 ```sh
-alias j2subst='docker run --rm -v "${PWD}:/w" docker.io/rockdrilla/j2subst '
+docker pull docker.io/rockdrilla/j2subst
 ```
+
+## Quick start
 
 ### Basic usage
 
@@ -85,6 +73,54 @@ Control recursion depth:
 j2subst --depth 3 /path/to/templates/
 ```
 
+### Example template
+
+```jinja2
+# config.j2
+server_name: {{ server.name }}
+database_url: {{ database.url }}
+environment: {{ env.ENVIRONMENT }}
+```
+
+With configuration file `config.yml`:
+```yaml
+server:
+  name: myserver
+database:
+  url: postgresql://localhost/mydb
+```
+
+Along with dictionaries above, the following variables are available:
+
+- `{{ is_ci }}` - `True` if running in CI/CD environment, `False` otherwise
+- `{{ j2subst_file }}` - path to the currently processed template
+- `{{ j2subst_origin }}` - directory of the currently processed template
+
+*Nota bene*: `j2subst_file` and `j2subst_origin` are set to `None` when processing template from stdin.
+
+Example:
+```jinja2
+{% if is_ci %}
+  Running in CI environment
+{% endif %}
+
+{%- if j2subst_origin %}
+  {#- accessing files "near" template file -#}
+{%- endif %}
+```
+
+### Docker usage
+
+Docker image `docker.io/rockdrilla/j2subst` has several extra things done:
+1) entrypoint is set to `j2subst` script;
+2) current working directory is set to "`/w`" and it's volume.
+3) environment variable `J2SUBST_PYTHON_MODULES` is set to `"netaddr psutil"` - these packages are installed via `pip` and they are not dependencies in any kind, but provided for better usability; see file `docker/requirements-extra.txt`.
+
+To simplify usage, the one may define shell alias:
+```sh
+alias j2subst='docker run --rm -v "${PWD}:/w" docker.io/rockdrilla/j2subst '
+```
+
 ## Configuration
 
 ### Configuration files/directories
@@ -117,49 +153,6 @@ Template path placeholders:
 
 *Nota bene*: `@{ORIGIN}` is unavailable when processing template from stdin.
 
-## Template context
-
-Templates have access to two main dictionaries:
-
-- `{{ cfg }}` - Configuration data from files
-- `{{ env }}` - Environment variables
-
-### Example template
-
-```jinja2
-# config.j2
-server_name: {{ cfg.server.name }}
-database_url: {{ cfg.database.url }}
-environment: {{ env.ENVIRONMENT }}
-```
-
-With configuration file `config.yml`:
-```yaml
-server:
-  name: myserver
-database:
-  url: postgresql://localhost/mydb
-```
-
-Along with dictionaries above, the following variables are available:
-
-- `{{ is_ci }}` - `True` if running in CI/CD environment, `False` otherwise
-- `{{ j2subst_file }}` - path to the currently processed template
-- `{{ j2subst_origin }}` - directory of the currently processed template
-
-*Nota bene*: `j2subst_file` and `j2subst_origin` are set to `None` when processing template from stdin.
-
-Example:
-```jinja2
-{% if is_ci %}
-  Running in CI environment
-{% endif %}
-
-{%- if j2subst_origin %}
-  {#- accessing files "near" template file -#}
-{%- endif %}
-```
-
 ## Command line options
 
 ### Core options
@@ -182,8 +175,6 @@ Example:
 - `--dump [FORMAT]` - Dump configuration to stdout (YAML/JSON) and exit
 
 - `--python-modules LIST` - Space-separated list of Python modules to import
-- `--dict-name-cfg NAME` - Custom name for configuration dictionary
-- `--dict-name-env NAME` - Custom name for environment dictionary
 
 ### Help options
 
@@ -210,8 +201,6 @@ Corresponding environment variables are also supported:
 | J2SUBST_CONFIG_PATH    | --config-path    | string  |
 | J2SUBST_TEMPLATE_PATH  | --template-path  | string  |
 | J2SUBST_PYTHON_MODULES | --python-modules | string  |
-| J2SUBST_DICT_NAME_CFG  | --dict-name-cfg  | string  |
-| J2SUBST_DICT_NAME_ENV  | --dict-name-env  | string  |
 |------------------------+------------------+---------|
 ```
 
@@ -267,18 +256,6 @@ j2subst --python-modules "myjson:json math" template.j2
 This imports:
 - `json` module as `myjson`
 - `math` module as `math`
-
-### Custom dictionary names
-
-```sh
-j2subst --dict-name-cfg config --dict-name-env environment template.j2
-```
-
-Now use in templates:
-```jinja2
-{{ config.server.name }}
-{{ environment.HOME }}
-```
 
 ## Development
 
