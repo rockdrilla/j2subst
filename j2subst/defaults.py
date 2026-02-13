@@ -6,7 +6,7 @@ from typing import (
 from .dumpfmt import J2substDumpFormat
 
 
-J2SUBST_VERSION = '0.0.5'
+J2SUBST_VERSION = '0.0.6'
 
 J2SUBST_TEMPLATE_EXT = '.j2'
 

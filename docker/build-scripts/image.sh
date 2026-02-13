@@ -2,7 +2,7 @@
 set -ef
 cd "$(dirname "$0")/../.."
 
-IMAGE_VERSION="${IMAGE_VERSION:-v0.0.5}"
+IMAGE_VERSION="${IMAGE_VERSION:-v0.0.6}"
 
 set -a
 BUILDAH_FORMAT="${BUILDAH_FORMAT:-docker}"
